@@ -5,6 +5,8 @@ import lombok.Data;
 /**
  * 进行rpc通信的请求报文
  *
+ * todo: 可扩展协议头
+ *
  * @author czf
  * @Date 2020/8/15 9:01 下午
  */
