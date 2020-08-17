@@ -17,11 +17,11 @@
             <artifactId>rpc-commons</artifactId>
             <version>${version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.czf</groupId>
-            <artifactId>rpc-client</artifactId>
-            <version>${version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.czf</groupId>-->
+<!--            <artifactId>rpc-client</artifactId>-->
+<!--            <version>${version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.czf</groupId>
             <artifactId>rpc-server</artifactId>
