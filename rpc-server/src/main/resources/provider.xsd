@@ -2,11 +2,12 @@
 <xsd:schema xmlns="http://www.earlyrpc.com/schema/ch"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:beans="http://www.springframework.org/schema/beans"
-            targetNamespace="http://www.earlyrpc.com/schema/ch"
+            targetNamespace="http://www.earlyrpc.com/schema/provider"
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
 
     <xsd:import namespace="http://www.springframework.org/schema/beans" />
+
 
     <xsd:element name="provider">
         <xsd:complexType>
