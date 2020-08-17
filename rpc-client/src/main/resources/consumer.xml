@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:erpc="http://www.earlyrpc.com/schema/ch"
+       xmlns:erpc="http://www.earlyrpc.com/schema/consumer"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-        http://www.earlyrpc.com/schema/ch
-        http://www.earlyrpc.com/schema/ch.xsd">
+        http://www.earlyrpc.com/schema/consumer
+        http://www.earlyrpc.com/schema/consumer.xsd">
 
-    <erpc:consumer id="helloDesc" interface="com.earlyrpc.client.config.ConsumerDescription"/>
+    <erpc:consumer id="helloDesc" interface="com.earlyrpc.client.config"/>
 
 </beans>

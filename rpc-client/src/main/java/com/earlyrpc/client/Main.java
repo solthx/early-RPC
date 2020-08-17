@@ -10,7 +10,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class Main {
     public static void main(String[] args) {
-        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("consumer.xml");
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
         ConsumerDescription consumerDescription = (ConsumerDescription) applicationContext.getBean("helloDesc");
         System.out.println(consumerDescription);
     }

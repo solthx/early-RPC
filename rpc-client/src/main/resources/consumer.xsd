@@ -2,7 +2,7 @@
 <xsd:schema xmlns="http://www.earlyrpc.com/schema/ch"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:beans="http://www.springframework.org/schema/beans"
-            targetNamespace="http://www.earlyrpc.com/schema/ch"
+            targetNamespace="http://www.earlyrpc.com/schema/consumer"
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
 
