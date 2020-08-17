@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.earlyrpc.com/schema/ch"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:beans="http://www.springframework.org/schema/beans"
+            targetNamespace="http://www.earlyrpc.com/schema/ch"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:import namespace="http://www.springframework.org/schema/beans" />
+
+    <xsd:element name="consumer">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <!-- RPC接口全限定类名，必选 -->
+                    <xsd:attribute name="interface" type="xsd:string" use="required"></xsd:attribute>
+                    <!-- 协议类型，可选，默认eprc协议类型（即本次使用的）-->
+                    <xsd:attribute name="protocal" type="xsd:string" use="optional" default="erpc"></xsd:attribute>
+                    <!-- 超时时间，可选，默认5秒 -->
+                    <xsd:attribute name="timeout" type="xsd:string" use="optional" default="5000"></xsd:attribute>
+                    <!-- 序列化方式，默认protobuf -->
+                    <xsd:attribute name="serialization" type="xsd:string" use="optional" default="protobuf"></xsd:attribute>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
