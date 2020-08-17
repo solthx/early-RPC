@@ -1,0 +1,16 @@
+package com.earlyrpc.server.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
+
+/**
+ * @author: czf
+ * @date: 2020/8/17 14:30
+ */
+@Slf4j
+public class ProviderNamespaceHandler extends NamespaceHandlerSupport {
+
+    public void init() {
+        registerBeanDefinitionParser("server", new ProviderBeanDefinitionParser());
+    }
+}
