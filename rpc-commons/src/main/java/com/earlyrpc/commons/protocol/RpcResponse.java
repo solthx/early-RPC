@@ -11,7 +11,11 @@ import lombok.Data;
  */
 @Data
 public class RpcResponse {
-    private Long messageId;
+//    private Long messageId;
+//    private Object returnData;
+//    private RpcResStateEnum state;
+
+    private Integer responseId;
     private Object returnData;
-    private RpcResStateEnum state;
+    private String errMsg;
 }
