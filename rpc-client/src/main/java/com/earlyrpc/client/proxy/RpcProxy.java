@@ -1,12 +1,16 @@
 package com.earlyrpc.client.proxy;
 
 import com.earlyrpc.client.config.ConsumerDescription;
+import com.earlyrpc.client.connect.ConnectionManager;
+import com.earlyrpc.client.connect.Sender;
 import com.earlyrpc.client.fake.RpcClient;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
+import com.earlyrpc.commons.utils.async.RpcResponsePromise;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 
 /**
  * todo:
@@ -36,8 +40,9 @@ public class RpcProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         RpcRequest rpcRequest = getRpcRequest(method, args);
         // todo: change
-        RpcClient rpcClient = new RpcClient("127.0.0.1",8000);
-        RpcResponse response = rpcClient.send(rpcRequest);
+        Sender sender = ConnectionManager.getInstance().getSender();
+        RpcResponsePromise rpcResponsePromise = sender.sendRequest(rpcRequest);
+        RpcResponse response = rpcResponsePromise.get();
         return response.getReturnData();
     }
 

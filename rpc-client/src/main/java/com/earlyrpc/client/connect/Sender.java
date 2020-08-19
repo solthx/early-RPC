@@ -8,5 +8,5 @@ import com.earlyrpc.commons.utils.async.RpcResponsePromise;
  * @Date 2020/8/18 9:42 下午
  */
 public interface Sender {
-    RpcResponsePromise send(RpcRequest rpcRequest);
+    RpcResponsePromise sendRequest(RpcRequest rpcRequest);
 }
