@@ -18,7 +18,6 @@ public class ConsumerBeanDefinitionParser extends AbstractSingleBeanDefinitionPa
     }
 
     protected void doParse(Element element, BeanDefinitionBuilder bean) {
-        // this will never be null since the schema explicitly requires that a value be supplied
         String interfaceName = element.getAttribute("interface");
         bean.addConstructorArgValue(interfaceName);
 

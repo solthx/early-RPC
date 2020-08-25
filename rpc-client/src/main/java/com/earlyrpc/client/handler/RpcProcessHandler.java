@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
+ * rpc协议业务处理handler
+ *
  * @author czf
  * @Date 2020/8/18 8:40 下午
  */
@@ -25,6 +27,11 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
     private Map<Integer, RpcResponsePromise> promiseMap = new ConcurrentHashMap<>(16);
 
 
+    /**
+     * 连接成功时，保存channel用于之后发送数
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         super.channelRegistered(ctx);
