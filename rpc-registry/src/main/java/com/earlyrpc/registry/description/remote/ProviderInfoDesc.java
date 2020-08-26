@@ -12,7 +12,6 @@ import java.util.List;
  * @Date 2020/8/25 9:46 下午
  */
 @Data
-@InfoDesc
 public class ProviderInfoDesc extends BaseInfoDesc {
     /**
      * 服务提供方提供的服务列表

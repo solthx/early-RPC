@@ -2,6 +2,7 @@ package com.earlyrpc.registry;
 
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -21,9 +22,25 @@ public abstract class LocalCacheTableManager implements RpcDiscovery {
     /**
      * 本地缓存表
      */
+    @Resource
     private LocalCacheTable cacheTable;
 
 
     public LocalCacheTableManager() {
+        // 初始化本地缓存
+        updateLocalCacheTable();
     }
+
+    /**
+     * 更新本地缓存表（即重新拉取信息，重新转换）
+     */
+    public void updateLocalCacheTable(){
+        List<BaseInfoDesc> baseInfoDescs = listRegisteredInfoDesc();
+        cacheTable.updateLocalCacheTable(baseInfoDescs);
+    }
+
+    public List<String> getProviderList(String interfaceName) {
+        return cacheTable.getProviderList(interfaceName);
+    }
+
 }

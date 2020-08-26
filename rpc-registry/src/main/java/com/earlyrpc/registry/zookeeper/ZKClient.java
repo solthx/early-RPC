@@ -62,13 +62,13 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry {
                 switch (event.getType()){
                     case CHILD_ADDED:
                         log.info("有新服务上线!, 服务相关信息内容：{}",event.getData().getData());
-                        // todo: updateLocalCacheTable(); 更新本地缓存
+                        updateLocalCacheTable(); // 更新本地缓存
                     case CHILD_REMOVED:
                         log.info("监听到新服务上线, 服务相关信息内容：{}",event.getData().getData());
-                        // todo: updateLocalCacheTable(); 更新本地缓存
+                        updateLocalCacheTable(); // 更新本地缓存
                     case CHILD_UPDATED:
                         log.info("监听到新服务更新, 服务相关信息内容：{}",event.getData().getData());
-                        // todo: updateLocalCacheTable(); 更新本地缓存
+                        updateLocalCacheTable(); // 更新本地缓存
                 }
             }
         });
@@ -90,7 +90,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry {
      */
     @Override
     public List<BaseInfoDesc> listRegisteredInfoDesc() {
-        //todo
+        // todo: next
         return null;
     }
 

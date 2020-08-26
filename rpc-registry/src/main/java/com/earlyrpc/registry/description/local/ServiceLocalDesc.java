@@ -1,5 +1,6 @@
 package com.earlyrpc.registry.description.local;
 
+import com.earlyrpc.registry.description.remote.ServiceInfoDesc;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -18,14 +19,21 @@ public class ServiceLocalDesc {
 
     private String interfaceName;
 
+    private String alias;
+
     /**
      * 提供该服务的provider地址
      */
     private List<String> addressList;
 
-    public ServiceLocalDesc(String serviceName, String interfaceName) {
-        this.serviceName = serviceName;
-        this.interfaceName = interfaceName;
+    public ServiceLocalDesc() {
         addressList = new ArrayList<String>();
+    }
+
+    public ServiceLocalDesc(ServiceInfoDesc service) {
+        this();
+        serviceName = service.getServiceName();
+        interfaceName = service.getInterfaceName();
+        alias = service.getAlias();
     }
 }

@@ -10,7 +10,6 @@ import lombok.Data;
  * @Date 2020/8/25 9:26 下午
  */
 @Data
-@InfoDesc
 public class ServiceInfoDesc {
     /**
      * 服务名称

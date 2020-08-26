@@ -10,7 +10,6 @@ import lombok.Data;
  * @date: 2020/8/26 9:04
  */
 @Data
-@InfoDesc
 public class ConsumerInfoDesc extends BaseInfoDesc{
 
     private String consumerName;
