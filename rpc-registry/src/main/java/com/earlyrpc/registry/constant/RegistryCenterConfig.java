@@ -1,6 +1,7 @@
 package com.earlyrpc.registry.constant;
 
 import lombok.Data;
+import org.springframework.stereotype.Component;
 
 /**
  * 配置中心相关信息
@@ -8,6 +9,7 @@ import lombok.Data;
  * @author czf
  * @Date 2020/8/25 10:59 下午
  */
+@Component
 public enum RegistryCenterConfig {
     REGISTRY_ROOT_TYPE("/eprc_registry"),
     PROVIDER_TYPE(REGISTRY_ROOT_TYPE.getPath()+"/provider"),

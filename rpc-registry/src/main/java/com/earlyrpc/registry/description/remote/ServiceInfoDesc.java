@@ -1,5 +1,6 @@
-package com.earlyrpc.registry.description;
+package com.earlyrpc.registry.description.remote;
 
+import com.earlyrpc.registry.annotation.InfoDesc;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
  * @Date 2020/8/25 9:26 下午
  */
 @Data
+@InfoDesc
 public class ServiceInfoDesc {
     /**
      * 服务名称

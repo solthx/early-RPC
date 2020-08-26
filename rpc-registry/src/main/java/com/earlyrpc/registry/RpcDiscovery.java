@@ -1,6 +1,6 @@
 package com.earlyrpc.registry;
 
-import com.earlyrpc.registry.description.BaseInfoDesc;
+import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 
 import java.util.List;
 

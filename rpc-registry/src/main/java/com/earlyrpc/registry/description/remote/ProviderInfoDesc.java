@@ -1,5 +1,6 @@
-package com.earlyrpc.registry.description;
+package com.earlyrpc.registry.description.remote;
 
+import com.earlyrpc.registry.annotation.InfoDesc;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * @Date 2020/8/25 9:46 下午
  */
 @Data
+@InfoDesc
 public class ProviderInfoDesc extends BaseInfoDesc {
     /**
      * 服务提供方提供的服务列表

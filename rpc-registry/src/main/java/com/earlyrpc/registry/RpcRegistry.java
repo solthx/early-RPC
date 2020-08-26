@@ -1,6 +1,6 @@
 package com.earlyrpc.registry;
 
-import com.earlyrpc.registry.description.ServiceInfoDesc;
+import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 
 /**
  * 注册
@@ -12,7 +12,7 @@ public interface RpcRegistry {
 
     /**
      * 向注册中心注册服务信息
-     * @param serviceInfoDesc
+     * @param baseInfoDesc
      */
-    void register(ServiceInfoDesc serviceInfoDesc);
+    void register(BaseInfoDesc baseInfoDesc);
 }
