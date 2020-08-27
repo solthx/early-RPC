@@ -8,6 +8,7 @@ import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 import com.earlyrpc.registry.description.remote.ConsumerInfoDesc;
 import com.earlyrpc.registry.description.remote.ProviderInfoDesc;
+import com.earlyrpc.registry.description.remote.ServiceInfoDesc;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,6 +17,10 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +30,7 @@ import java.util.List;
  * @Date 2020/8/25 10:18 下午
  */
 @Slf4j
-public class ZKClient extends LocalCacheTableManager implements RpcRegistry {
+public class ZKClient extends LocalCacheTableManager implements RpcRegistry, ApplicationContextAware {
 
     /**
      * 注册中心的连接地址
@@ -82,6 +87,15 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry {
         });
 
         this.serializer = serializer;
+
+        initLocalCacheTable();
+    }
+
+    /**
+     * 初始化本地缓存表
+     */
+    private void initLocalCacheTable() {
+
     }
 
     public ZKClient(String address, Integer sessionTimeout, RegistryCenterConfig path, Serializer serializer) {
@@ -178,5 +192,34 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry {
         }else{
             log.warn("{}注册失败.", desc);
         }
+    }
+
+    /**
+     * 测试
+     * @param args
+     */
+    public static void main(String[] args) {
+        ServiceInfoDesc serviceInfoDesc = new ServiceInfoDesc();
+        serviceInfoDesc.setAlias("registry");
+        serviceInfoDesc.setInterfaceName("com.earlyrpc.registry.RpcRegistry");
+        serviceInfoDesc.setServiceName("注册器");
+        System.out.println(serviceInfoDesc+"=========");
+        ProviderInfoDesc providerInfoDesc = new ProviderInfoDesc();
+        providerInfoDesc.setAddress("127.0.0.1:2181");
+        System.out.println(providerInfoDesc+"===========");
+        providerInfoDesc.getServiceInfoDescList().add(serviceInfoDesc);
+
+        com.earlyrpc.registry.zookeeper.ZKClient zkClient = new ZKClient("127.0.0.1:2181",RegistryCenterConfig.PROVIDER_TYPE);
+
+        System.out.println("注册");
+        zkClient.register(providerInfoDesc);
+        System.out.println("注册成功");
+
+
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
     }
 }

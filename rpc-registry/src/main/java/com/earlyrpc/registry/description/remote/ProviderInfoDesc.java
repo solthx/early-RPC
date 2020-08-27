@@ -3,6 +3,7 @@ package com.earlyrpc.registry.description.remote;
 import com.earlyrpc.registry.annotation.InfoDesc;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,8 +14,13 @@ import java.util.List;
  */
 @Data
 public class ProviderInfoDesc extends BaseInfoDesc {
+
     /**
      * 服务提供方提供的服务列表
      */
     private List<ServiceInfoDesc> serviceInfoDescList;
+
+    public ProviderInfoDesc() {
+        this.serviceInfoDescList=new ArrayList<ServiceInfoDesc>();
+    }
 }

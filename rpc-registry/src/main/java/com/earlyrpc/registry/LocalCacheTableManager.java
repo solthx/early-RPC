@@ -28,6 +28,7 @@ public abstract class LocalCacheTableManager implements RpcDiscovery {
 
     public LocalCacheTableManager() {
         // 初始化本地缓存
+        // todo: bug:此语句会在子类初始化之前执行，导致空指针.
         updateLocalCacheTable();
     }
 
