@@ -1,7 +1,12 @@
 package com.earlyrpc.registry.constant;
 
+import com.earlyrpc.registry.description.remote.BaseInfoDesc;
+import com.earlyrpc.registry.description.remote.ConsumerInfoDesc;
+import com.earlyrpc.registry.description.remote.ServiceInfoDesc;
 import lombok.Data;
 import org.springframework.stereotype.Component;
+
+import javax.management.RuntimeErrorException;
 
 /**
  * 配置中心相关信息
@@ -25,7 +30,15 @@ public enum RegistryCenterConfig {
         return path;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    // 增加类型映射
+
+    public static RegistryCenterConfig getPath(BaseInfoDesc baseInfoDesc){
+        if ( baseInfoDesc.getClass().equals(ServiceInfoDesc.class) ){
+            return REGISTRY_ROOT_TYPE;
+        }else if ( baseInfoDesc.getClass().equals(ConsumerInfoDesc.class) ){
+            return CONSUMER_TYPE;
+        }
+        throw new RuntimeException("不存在的类型...");
     }
+
 }
