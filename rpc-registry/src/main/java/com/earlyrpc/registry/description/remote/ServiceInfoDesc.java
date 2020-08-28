@@ -26,4 +26,11 @@ public class ServiceInfoDesc {
      */
     private String alias;
 
+    public ServiceInfoDesc(String serviceName, String interfaceName, String alias) {
+        this.serviceName = serviceName;
+        this.interfaceName = interfaceName;
+        this.alias = alias;
+    }
+
+    public ServiceInfoDesc(){}
 }

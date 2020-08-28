@@ -28,4 +28,10 @@ public interface RpcRegistry {
      * @param key
      */
     void delete(String key);
+
+    /**
+     * 删除指定节点
+     * @param baseInfoDesc
+     */
+    void delete(BaseInfoDesc baseInfoDesc);
 }

@@ -77,18 +77,15 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
             public void childEvent(CuratorFramework cf, PathChildrenCacheEvent event) throws Exception {
                 switch (event.getType()) {
                     case CHILD_ADDED:
-                        System.out.println("有新服务上线!");
-                        log.info("有新服务上线!, 服务相关信息内容：{}", event.getData().getData());
+                        log.info("有新服务上线!, 服务标识为：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                     case CHILD_REMOVED:
-                        System.out.println("监听到新服务下线！");
-                        log.info("监听到新服务下线, 服务相关信息内容：{}", event.getData().getData());
+                        log.info("有服务下线, 服务标识为：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                     case CHILD_UPDATED:
-                        System.out.println("监听到新服务更新！");
-                        log.info("监听到新服务更新, 服务相关信息内容：{}", event.getData().getData());
+                        log.info("监听到新服务更新, 服务标识为：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                 }
@@ -124,7 +121,9 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     private void initZKPath() {
         for (RegistryCenterConfig type : RegistryCenterConfig.values()) {
             try {
-                cf.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(type.getPath());
+                if ( cf.checkExists().forPath(type.getPath()) == null ) {
+                    cf.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(type.getPath());
+                }
             } catch (Exception e) {
                 log.info("初始化 {} 节点时出现异常", type.getPath());
             }
@@ -141,7 +140,9 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         List<BaseInfoDesc> resList = new ArrayList<BaseInfoDesc>();
 
         for( RegistryCenterConfig type:RegistryCenterConfig.values()){
-            appendInfoDesc(resList, type);
+            if ( false == type.equals(RegistryCenterConfig.REGISTRY_ROOT_TYPE) ){
+                appendInfoDesc(resList, type);
+            }
         }
 
         return resList;
@@ -188,7 +189,9 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
             try {
                 // 节点路径 = 类型路径(如消费者路径) + 唯一标识(ip+端口)
                 String nodePath = typePath.getPath() + "/" + desc.getLocalAddress();
-                cf.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(nodePath, descBytes);
+                if ( cf.checkExists().forPath(nodePath) == null ) {
+                    cf.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(nodePath, descBytes);
+                }
             } catch (Exception e) {
                 log.warn("注册时异常, 创建zk节点时出现异常：{}",e.getMessage());
             }
@@ -200,16 +203,16 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     /**
      * 对指定节点进行更新
      *
-     * @param key          节点对应的本地ip
+     * @param path          节点对应的本地ip
      * @param baseInfoDesc 更新的节点信息
      */
     @Override
-    public void update(String key, BaseInfoDesc baseInfoDesc) {
+    public void update(String path, BaseInfoDesc baseInfoDesc) {
         byte[] bytesData = serializer.serialize(baseInfoDesc);
         try {
-            cf.setData().forPath(key, bytesData);
+            cf.setData().forPath(path, bytesData);
         } catch (Exception e) {
-            log.warn("节点 {} 在更新时出现异常. 异常信息为 {} ", key, e.getMessage());
+            log.warn(" {} 在更新时出现异常. 异常信息为 {} ", path, e.getMessage());
         }
     }
 
@@ -220,10 +223,10 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      */
     public void registerOrUpdate(BaseInfoDesc baseInfoDesc){
         try {
-            if ( cf.checkExists().forPath(baseInfoDesc.getLocalAddress()) == null ){
+            if ( cf.checkExists().forPath(baseInfoDesc.getZkAbsolutePath()) == null ){
                 register(baseInfoDesc);
             }else{
-                update(baseInfoDesc.getLocalAddress(), baseInfoDesc);
+                update(baseInfoDesc.getZkAbsolutePath(), baseInfoDesc);
             }
         } catch (Exception e) {
             log.warn("进行checkExsits操作时出现异常, 节点信息: {}, 异常信息: {}",baseInfoDesc, e.getMessage());
@@ -241,6 +244,20 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
             cf.delete().forPath(key);
         } catch (Exception e) {
             log.warn("节点 {} 在删除时出现异常, 异常信息为 {}", key, e.getMessage());
+        }
+    }
+
+    /**
+     * 删除指定节点
+     *
+     * @param baseInfoDesc
+     */
+    @Override
+    public void delete(BaseInfoDesc baseInfoDesc) {
+        try {
+            cf.delete().forPath(baseInfoDesc.getZkAbsolutePath());
+        } catch (Exception e) {
+            log.warn("节点 {} 在删除时出现异常, 异常信息为 {}", baseInfoDesc.getZkAbsolutePath(), e.getMessage());
         }
     }
 

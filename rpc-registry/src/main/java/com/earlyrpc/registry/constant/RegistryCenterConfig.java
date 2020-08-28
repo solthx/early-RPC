@@ -27,19 +27,33 @@ public enum RegistryCenterConfig {
         this.path = path;
     }
 
+    /**
+     * 根据type类型获取对应的class对象
+     * @param type
+     * @return
+     */
+    public static Class<? extends BaseInfoDesc> getClass(RegistryCenterConfig type) {
+        switch (type){
+            case CONSUMER_TYPE:
+                return ConsumerInfoDesc.class;
+            case PROVIDER_TYPE:
+                return ProviderInfoDesc.class;
+        }
+        throw new RuntimeException("不存在的类型...找不到对应的类对象");
+    }
+
     public String getPath() {
         return path;
     }
 
     // 增加类型映射
-
     public static RegistryCenterConfig getPath(BaseInfoDesc baseInfoDesc){
         if ( baseInfoDesc.getClass().equals(ProviderInfoDesc.class) ){
             return PROVIDER_TYPE;
         }else if ( baseInfoDesc.getClass().equals(ConsumerInfoDesc.class) ){
             return CONSUMER_TYPE;
         }
-        throw new RuntimeException("不存在的类型...");
+        throw new RuntimeException("不存在的类型...找不到对于的type");
     }
 
 }

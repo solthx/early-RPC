@@ -1,6 +1,7 @@
 package com.earlyrpc.registry.description.remote;
 
 import com.earlyrpc.registry.annotation.InfoDesc;
+import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -20,7 +21,9 @@ public class ProviderInfoDesc extends BaseInfoDesc {
      */
     private List<ServiceInfoDesc> serviceInfoDescList;
 
-    public ProviderInfoDesc() {
+    public ProviderInfoDesc(String localAddress) {
+        super(localAddress);
         this.serviceInfoDescList=new ArrayList<ServiceInfoDesc>();
+        this.zkAbsolutePath = RegistryCenterConfig.PROVIDER_TYPE.getPath() + "/" + localAddress;
     }
 }

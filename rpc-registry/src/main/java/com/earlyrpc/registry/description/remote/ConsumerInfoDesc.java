@@ -1,6 +1,7 @@
 package com.earlyrpc.registry.description.remote;
 
 import com.earlyrpc.registry.annotation.InfoDesc;
+import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import lombok.Data;
 
 /**
@@ -11,6 +12,12 @@ import lombok.Data;
  */
 @Data
 public class ConsumerInfoDesc extends BaseInfoDesc{
+
+    public ConsumerInfoDesc(String localAddress, String consumerName) {
+        super(localAddress);
+        this.consumerName = consumerName;
+        this.zkAbsolutePath = RegistryCenterConfig.CONSUMER_TYPE.getPath() + "/" + localAddress;
+    }
 
     private String consumerName;
 

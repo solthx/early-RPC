@@ -114,6 +114,11 @@ public class LocalCacheTable {
      * @param newServiceMap
      */
     private void addServiceInfoDesc(ProviderInfoDesc infoDesc, Map<String, ServiceLocalDesc> newServiceMap) {
+        if ( infoDesc == null
+                || infoDesc.getServiceInfoDescList()==null
+                || infoDesc.getServiceInfoDescList().size()==0 ) {
+            return;
+        }
         for( ServiceInfoDesc service:infoDesc.getServiceInfoDescList() ){
             // 如果不存在就初始化
             if ( newServiceMap.containsKey(service.getInterfaceName()) == false ){
