@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 基于Zookeeper实现的注册中心
+ *
  * @author czf
  * @Date 2020/8/25 10:18 下午
  */
@@ -51,6 +53,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      * 序列化器
      */
     private Serializer serializer;
+
 
     public ZKClient(String address, Integer sessionTimeout, RetryPolicy retryPolicy, String listeningRootPath, Serializer serializer) {
         this.address = address;
@@ -101,19 +104,6 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
     }
 
-    /**
-     * 初始化zookeeper服务器上的路径
-     */
-    private void initZKPath() {
-        for (RegistryCenterConfig type : RegistryCenterConfig.values()) {
-            try {
-                cf.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(type.getPath());
-            } catch (Exception e) {
-                log.info("初始化 {} 节点时出现异常", type.getPath());
-            }
-        }
-    }
-
 
     public ZKClient(String address, Integer sessionTimeout, RegistryCenterConfig path, Serializer serializer) {
         this(address, sessionTimeout, new ExponentialBackoffRetry(5000, 10), path.getPath(), serializer);
@@ -128,7 +118,18 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     }
 
 
-
+    /**
+     * 初始化zookeeper服务器上的路径
+     */
+    private void initZKPath() {
+        for (RegistryCenterConfig type : RegistryCenterConfig.values()) {
+            try {
+                cf.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(type.getPath());
+            } catch (Exception e) {
+                log.info("初始化 {} 节点时出现异常", type.getPath());
+            }
+        }
+    }
 
     /**
      * 获取注册中心所有已经注册的信息
@@ -140,51 +141,30 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         List<BaseInfoDesc> resList = new ArrayList<BaseInfoDesc>();
 
         for( RegistryCenterConfig type:RegistryCenterConfig.values()){
-            if ( type.equals(RegistryCenterConfig.PROVIDER_TYPE) ){
-                appendProviderInfoDesc(resList, type.getPath());
-            }else if ( type.equals(RegistryCenterConfig.CONSUMER_TYPE) ){
-                appendConsumerInfoDesc(resList, type.getPath());
-            }
+            appendInfoDesc(resList, type);
         }
 
         return resList;
     }
 
-    /**
-     * 将zookeeper上consumer路径下存储的 consumer的信息
-     * 进行反序列化，并将其存储的信息加到resList中
-     *
-     * @param resList
-     * @param path
-     */
-    private void appendConsumerInfoDesc(List<BaseInfoDesc> resList, String path) {
-        try {
-            List<String> consumerInfoStrList = cf.getChildren().forPath(path);
-            for(String consumerInfoStr:consumerInfoStrList){
-                ConsumerInfoDesc consumerInfo = serializer.deserialize(consumerInfoStr.getBytes(), ConsumerInfoDesc.class);
-                resList.add(consumerInfo);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
-     * 将zookeeper上provider路径下存储的 provider的信息
+     * 将zookeeper上path路径下存储的 节点 的信息
      * 进行反序列化，并将其存储的信息加到resList中
      *
      * @param resList
-     * @param path
+     * @param type
      */
-    private void appendProviderInfoDesc(List<BaseInfoDesc> resList, String path) {
+    private void appendInfoDesc(List<BaseInfoDesc> resList, RegistryCenterConfig type) {
         try {
+            String path = type.getPath();
             List<String> nodePathList = cf.getChildren().forPath(path);
             for(String nodePath:nodePathList){
-                String nodeAbsolutePath = path + "/"+ nodePath;
+                String nodeAbsolutePath = path + "/" + nodePath;
 
-                byte[] providerInfoBytes = cf.getData().forPath(nodeAbsolutePath);
+                byte[] infoBytes = cf.getData().forPath(nodeAbsolutePath);
 
-                ProviderInfoDesc providerInfo = serializer.deserialize(providerInfoBytes, ProviderInfoDesc.class);
+                BaseInfoDesc providerInfo = serializer.deserialize(infoBytes, RegistryCenterConfig.getClass(type));
                 resList.add(providerInfo);
             }
         } catch (Exception e) {
