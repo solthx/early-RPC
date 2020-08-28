@@ -11,7 +11,8 @@ import lombok.Data;
 @Data
 public abstract class BaseInfoDesc {
     /**
-     * 服务提供方的地址 ip:port (例如: 127.0.0.1:8080 )
+     * 当前节点地址
+     * ip:port (例如: 127.0.0.1:8080 )
      */
-    protected String address;
+    protected String localAddress;
 }

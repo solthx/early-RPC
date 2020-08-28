@@ -2,6 +2,7 @@ package com.earlyrpc.registry.constant;
 
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 import com.earlyrpc.registry.description.remote.ConsumerInfoDesc;
+import com.earlyrpc.registry.description.remote.ProviderInfoDesc;
 import com.earlyrpc.registry.description.remote.ServiceInfoDesc;
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import javax.management.RuntimeErrorException;
  */
 @Component
 public enum RegistryCenterConfig {
-    REGISTRY_ROOT_TYPE("/eprc_registry"),
+    REGISTRY_ROOT_TYPE("/erpc_registry"),
     PROVIDER_TYPE(REGISTRY_ROOT_TYPE.getPath()+"/provider"),
     CONSUMER_TYPE(REGISTRY_ROOT_TYPE.getPath()+"/consumer")
     ;
@@ -33,8 +34,8 @@ public enum RegistryCenterConfig {
     // 增加类型映射
 
     public static RegistryCenterConfig getPath(BaseInfoDesc baseInfoDesc){
-        if ( baseInfoDesc.getClass().equals(ServiceInfoDesc.class) ){
-            return REGISTRY_ROOT_TYPE;
+        if ( baseInfoDesc.getClass().equals(ProviderInfoDesc.class) ){
+            return PROVIDER_TYPE;
         }else if ( baseInfoDesc.getClass().equals(ConsumerInfoDesc.class) ){
             return CONSUMER_TYPE;
         }

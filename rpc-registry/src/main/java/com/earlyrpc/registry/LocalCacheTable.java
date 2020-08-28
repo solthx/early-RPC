@@ -30,8 +30,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @date: 2020/8/26 9:55
  */
 @Data
-@Component
 public class LocalCacheTable {
+
+    /**
+     * 静态内部类 使得该对象为单例对象
+     */
+    private LocalCacheTable(){
+        consumerLocalDescList = new ArrayList<ConsumerLocalDesc>();
+        serviceMap = new HashMap<String, ServiceLocalDesc>();
+    }
+
+    private static class LocalCacheTableInstance{
+        public static LocalCacheTable INSTANCE = new LocalCacheTable();
+    }
+
+    public static LocalCacheTable getInstance(){
+        return LocalCacheTableInstance.INSTANCE;
+    }
+
+
 
     /**
      * 消费者信息存储
@@ -46,11 +63,6 @@ public class LocalCacheTable {
      */
     private volatile Map<String, ServiceLocalDesc> serviceMap;
 
-
-    public LocalCacheTable() {
-        consumerLocalDescList = new ArrayList<ConsumerLocalDesc>();
-        serviceMap = new HashMap<String, ServiceLocalDesc>();
-    }
 
     /**
      * 根据infoList对当前LocalCacheTable进行更新（以cow的方式进行）
@@ -108,7 +120,7 @@ public class LocalCacheTable {
                 newServiceMap.put(service.getInterfaceName(), new ServiceLocalDesc(service));
             }
             ServiceLocalDesc serviceLocalDesc = newServiceMap.get(service.getInterfaceName());
-            serviceLocalDesc.getAddressList().add(infoDesc.getAddress());
+            serviceLocalDesc.getAddressList().add(infoDesc.getLocalAddress());
         }
     }
 
