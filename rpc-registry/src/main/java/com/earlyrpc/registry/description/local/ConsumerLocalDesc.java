@@ -2,6 +2,9 @@ package com.earlyrpc.registry.description.local;
 
 import lombok.Data;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 /**
  * 消费者信息的本地描述
  *
@@ -11,4 +14,8 @@ import lombok.Data;
 @Data
 public class ConsumerLocalDesc {
     private String consumerName;
+
+    public static void main(String[] args) {
+
+    }
 }

@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class CreateProxyBeanPostProcessor implements BeanFactoryPostProcessor {
+public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor {
 
     /**
      * 加载完所有BeanDefinition之后回调该方法

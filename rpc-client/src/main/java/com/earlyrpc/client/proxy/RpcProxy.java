@@ -3,14 +3,12 @@ package com.earlyrpc.client.proxy;
 import com.earlyrpc.client.config.ConsumerDescription;
 import com.earlyrpc.client.connect.ConnectionManager;
 import com.earlyrpc.client.connect.Sender;
-import com.earlyrpc.client.fake.RpcClient;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
 import com.earlyrpc.commons.utils.async.RpcResponsePromise;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
 
 /**
  * todo:
@@ -29,6 +27,12 @@ public class RpcProxy implements InvocationHandler {
     }
 
     /**
+     * 对方法进行动态代理
+     *
+     * 1. 生成request
+     * 2. 发送
+     * 3. 获取response并返回
+     *
      * todo: 先简单实现下
      *
      * @param proxy
@@ -38,16 +42,25 @@ public class RpcProxy implements InvocationHandler {
      * @throws Throwable
      */
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+        // todo: 方法过滤, 对于toString这种方法就不用进行代理
+
+        // 1. 生成request
         RpcRequest rpcRequest = getRpcRequest(method, args);
-        // todo: change
+
+        // todo: 先简单实现一下，之后更改 to change
+        // 2. 发送
         Sender sender = ConnectionManager.getInstance().getSender();
         RpcResponsePromise rpcResponsePromise = sender.sendRequest(rpcRequest);
+
+        // 3. 获取response并返回
         RpcResponse response = rpcResponsePromise.get();
         return response.getReturnData();
     }
 
     /**
-     * todo: 接口不一致问题
+     *
+     * ps: rpc接口在consumer端和provider端的全限定类名必须一样！
      *
      * 生成rpc请求对象头
      * @return
@@ -55,8 +68,9 @@ public class RpcProxy implements InvocationHandler {
     private RpcRequest getRpcRequest(Method method, Object [] params) {
         RpcRequest req = new RpcRequest();
 //        req.setInterfaceName(desc.getInterfaceName());
-        //req.setInterfaceName(method.getDeclaringClass().getName());
+        // todo: mock数据，之后修改
         req.setClazzName("com.czf.service.export.HelloService");
+//        req.setClazzName(desc.getInterfaceName());
         req.setMethodName(method.getName());
         req.setParamTypeList(method.getParameterTypes());
         req.setParamList(params);
