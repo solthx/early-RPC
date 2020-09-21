@@ -36,8 +36,9 @@ public class LocalCacheTable {
      * 静态内部类 使得该对象为单例对象
      */
     private LocalCacheTable(){
-        consumerLocalDescList = new ArrayList<ConsumerLocalDesc>();
-        serviceMap = new HashMap<String, ServiceLocalDesc>();
+        this.consumerLocalDescList = new ArrayList<ConsumerLocalDesc>();
+        this.serviceMap = new HashMap<String, ServiceLocalDesc>();
+        this.providerServerAddressList = new ArrayList<String>();
     }
 
     private static class LocalCacheTableInstance{
@@ -63,6 +64,10 @@ public class LocalCacheTable {
      */
     private volatile Map<String, ServiceLocalDesc> serviceMap;
 
+    /**
+     * 所有provider server 的 ip:port
+     */
+    private volatile List<String> providerServerAddressList;
 
     /**
      * 根据infoList对当前LocalCacheTable进行更新（以cow的方式进行）
@@ -72,14 +77,17 @@ public class LocalCacheTable {
     public void updateLocalCacheTable(List<BaseInfoDesc> infoList){
         List<ConsumerLocalDesc> newConsumersList = new ArrayList<ConsumerLocalDesc>();
         Map<String, ServiceLocalDesc> newServiceMap = new HashMap<String, ServiceLocalDesc>();
+        List<String> newProviderServerAddressList = new ArrayList<String>();
 
         for( BaseInfoDesc infoDesc:infoList ){
             addInfoDesc(infoDesc, newConsumersList, newServiceMap);
+            newProviderServerAddressList.add(infoDesc.getLocalAddress());
         }
 
         // copy-on-write
         this.consumerLocalDescList = newConsumersList;
         this.serviceMap = newServiceMap;
+        this.providerServerAddressList = newProviderServerAddressList;
     }
 
     /**

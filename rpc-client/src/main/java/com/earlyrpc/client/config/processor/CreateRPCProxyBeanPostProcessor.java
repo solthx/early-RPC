@@ -36,13 +36,15 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
             ConsumerDescription desc = (ConsumerDescription) beanFactory.getBean(descName);
             String interfaceName = desc.getInterfaceName();
             String beanName = getBeanName(interfaceName);
+            // 在这里生成动态代理对象
             Object rpcProxy = RpcProxyCreator.createProxy(desc);
             if (rpcProxy==null){
                 throw new RuntimeException("接口: "+interfaceName+"的动态代理对象创建失败...");
             }
-            // 注册rpc动态代理到底层容器
+            // 注册rpc动态代理对象到底层容器
             beanFactory.registerSingleton(beanName, rpcProxy);
         }
+        //todo: 作为consumer，注册自己到zk上
     }
 
     /**

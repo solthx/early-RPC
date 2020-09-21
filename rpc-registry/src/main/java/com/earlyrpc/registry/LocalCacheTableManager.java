@@ -1,9 +1,7 @@
 package com.earlyrpc.registry;
 
-import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 import lombok.Data;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -29,7 +27,7 @@ public abstract class LocalCacheTableManager implements RpcDiscovery {
 
     public LocalCacheTableManager() {
         // 初始化本地缓存
-        cacheTable = LocalCacheTable.getInstance();
+        this.cacheTable = LocalCacheTable.getInstance();
     }
 
     /**

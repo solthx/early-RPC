@@ -11,10 +11,6 @@ import com.alibaba.fastjson.JSONObject;
 public class JSONSerializer extends Serializer {
 
     public <T> T deserialize(byte[] bytes, Class<T> clazz) {
-        System.out.println("-----");
-        System.out.println(bytes);
-        System.out.println(clazz);
-        System.out.println("-----");
         Object entity = JSONObject.parseObject(bytes, clazz);
         return (T)entity;
     }

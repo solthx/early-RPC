@@ -2,8 +2,10 @@ package com.earlyrpc.registry.zookeeper;
 
 import com.earlyrpc.commons.serializer.ProtoBufSerializer;
 import com.earlyrpc.commons.serializer.Serializer;
+import com.earlyrpc.registry.CallBack;
 import com.earlyrpc.registry.LocalCacheTableManager;
 import com.earlyrpc.registry.RpcRegistry;
+import com.earlyrpc.registry.constant.EventType;
 import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 import com.earlyrpc.registry.description.remote.ConsumerInfoDesc;
@@ -17,12 +19,23 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ *
  * 基于Zookeeper实现的注册中心
+ *
+ * 底层维护的 局部缓存表是单例模式，所有client共享，以cow的方式进行更新
+ *
+ * 主要功能:
+ *      1. zk的增删查改
+ *      2. zk的监听(一旦数据发生改变，则重新pull数据，这里pull的数据就是本地缓存表)
+ *          监听钩子方法(数据改变时要进行回调的方法)
+ *
  *
  * @author czf
  * @Date 2020/8/25 10:18 下午
@@ -33,7 +46,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     /**
      * 注册中心的连接地址
      */
-    private String address;
+    protected String address;
 
     /**
      * 超时时间, 默认为毫秒
@@ -48,6 +61,11 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     private CuratorFramework cf;
 
     private PathChildrenCache pathChildrenCache;
+
+    /**
+     * 所有需要回调的方法
+     */
+    private List<CallBack> eventListeners;
 
     /**
      * 序列化器
@@ -91,6 +109,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
                 }
             }
         });
+
         try {
             pathChildrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
         } catch (Exception e) {
@@ -98,7 +117,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         }
 
         this.serializer = serializer;
-
+        this.eventListeners = new ArrayList<CallBack>();
     }
 
 
@@ -114,6 +133,23 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         this(address, 3000, path, new ProtoBufSerializer());
     }
 
+    /**
+     * 将重写的callback方法存入list
+     * @param callBack
+     */
+    public void addListener(CallBack callBack){
+        eventListeners.add(callBack);
+    }
+
+    /**
+     * 回调
+     * @param eventType
+     */
+    public void invodeListener(EventType eventType){
+        for( CallBack f:eventListeners ){
+            f.callback(eventType);
+        }
+    }
 
     /**
      * 初始化zookeeper服务器上的路径
@@ -268,9 +304,16 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     public void refreshLocalCacheTable() {
         List<BaseInfoDesc> baseInfoDescs = listRegisteredInfoDesc();
         getCacheTable().updateLocalCacheTable(baseInfoDescs);
+        // 回调那些listener方法
+        invodeListener(EventType.AFTER_UPDATE_CACHETABLE);
     }
 
     public void close() {
         cf.close();
+        try {
+            pathChildrenCache.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

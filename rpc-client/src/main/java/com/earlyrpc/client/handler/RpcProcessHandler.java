@@ -4,6 +4,7 @@ import com.earlyrpc.client.connect.Sender;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
 import com.earlyrpc.commons.utils.async.RpcResponsePromise;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,8 +58,13 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
         }
     }
 
+    public void close() {
+        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+    }
+
     /**
      * 发送数据
+     *
      *
      * @param rpcRequest
      * @return
@@ -67,6 +73,7 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
     public RpcResponsePromise sendRequest(final RpcRequest rpcRequest){
         RpcResponsePromise promise = new RpcResponsePromise();
         int requestId = rpcRequest.getRequestId();
+        // 以requestId为key，存到map中，当收到response时，根据requestId进行获取并更新promise
         promiseMap.put(requestId, promise);
         channel.writeAndFlush(rpcRequest).addListener(new ChannelFutureListener() {
             @Override
