@@ -34,4 +34,6 @@ public interface RpcRegistry {
      * @param baseInfoDesc
      */
     void delete(BaseInfoDesc baseInfoDesc);
+
+    void close();
 }

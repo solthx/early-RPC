@@ -4,6 +4,7 @@ import com.earlyrpc.registry.RpcRegistry;
 import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import com.earlyrpc.registry.description.remote.ProviderInfoDesc;
 import com.earlyrpc.registry.zookeeper.ZKClient;
+import com.earlyrpc.server.handler.RpcServerChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -15,6 +16,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 基于Netty实现的server
@@ -54,6 +60,11 @@ public class RpcServer extends Server {
      */
     private ProviderInfoDesc providerInfoDesc;
 
+    /**
+     * 预先实例化好那些实现了接口的serviceBean
+     */
+    private Map<String, Object> serviceBeanCache;
+
 
     public RpcServer(String address, ProviderInfoDesc providerInfoDesc){
         this.registryAddress = "127.0.0.1:2181";
@@ -62,6 +73,7 @@ public class RpcServer extends Server {
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
         this.rpcRegistry = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
+        this.serviceBeanCache = new ConcurrentHashMap<>();
     }
 
     /**
@@ -69,12 +81,16 @@ public class RpcServer extends Server {
      */
     public void start() {
         this.worker = new Thread(new Runnable() {
+
+            private ThreadPoolExecutor threadPoolExecutor
+                    = new ThreadPoolExecutor(4, 8, 600, TimeUnit.SECONDS,new ArrayBlockingQueue<Runnable>(1000));
+
             public void run() {
                 ServerBootstrap b = new ServerBootstrap();
                 try {
                     b.group(bossGroup, workerGroup)
-                        .childHandler(null)
                         .channel(NioServerSocketChannel.class)
+                        .childHandler(new RpcServerChannelInitializer(serviceBeanCache, threadPoolExecutor))
                         .option(ChannelOption.SO_BACKLOG, 128)
                         .childOption(ChannelOption.SO_KEEPALIVE, true); // todo:...
 
@@ -95,7 +111,10 @@ public class RpcServer extends Server {
                         log.warn("出现异常{}", e);
                     }
                 } finally {
-                    // todo: 优雅地关闭
+                    // 优雅关闭
+                    workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully();
+                    rpcRegistry.close();
                 }
             }
         });
@@ -106,7 +125,9 @@ public class RpcServer extends Server {
     /**
      * 服务器关闭
      */
-    public void close() {
-
+    public void stop() {
+        if ( this.worker!=null && this.worker.isAlive() ){
+            this.worker.interrupt();
+        }
     }
 }

@@ -308,6 +308,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         invodeListener(EventType.AFTER_UPDATE_CACHETABLE);
     }
 
+    @Override
     public void close() {
         cf.close();
         try {

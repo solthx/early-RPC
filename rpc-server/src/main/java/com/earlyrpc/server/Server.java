@@ -16,6 +16,6 @@ public abstract class Server {
     /**
      * 服务器关闭
      */
-    abstract public void close();
+    abstract public void stop();
 
 }
