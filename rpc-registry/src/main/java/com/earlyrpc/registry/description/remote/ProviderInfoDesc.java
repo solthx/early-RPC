@@ -23,7 +23,7 @@ public class ProviderInfoDesc extends BaseInfoDesc {
 
     public ProviderInfoDesc(String localAddress) {
         super(localAddress);
-        this.serviceInfoDescList=new ArrayList<ServiceInfoDesc>();
+        this.serviceInfoDescList = new ArrayList<ServiceInfoDesc>();
         this.zkAbsolutePath = RegistryCenterConfig.PROVIDER_TYPE.getPath() + "/" + localAddress;
     }
 }

@@ -1,6 +1,5 @@
 package com.earlyrpc.registry.description.remote;
 
-import com.earlyrpc.registry.annotation.InfoDesc;
 import lombok.Data;
 
 /**
@@ -33,4 +32,9 @@ public class ServiceInfoDesc {
     }
 
     public ServiceInfoDesc(){}
+
+    public ServiceInfoDesc(String serviceName, String interfaceName) {
+        this.serviceName = serviceName;
+        this.interfaceName = interfaceName;
+    }
 }

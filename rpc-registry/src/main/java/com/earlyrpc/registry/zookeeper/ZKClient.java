@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
@@ -118,6 +119,8 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
         this.serializer = serializer;
         this.eventListeners = new ArrayList<CallBack>();
+
+        refreshLocalCacheTable();
     }
 
 
@@ -302,6 +305,10 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      */
     @Override
     public void refreshLocalCacheTable() {
+        // 若服务还没启起来
+        if ( !cf.getState().equals(CuratorFrameworkState.STARTED) )
+            return;
+
         List<BaseInfoDesc> baseInfoDescs = listRegisteredInfoDesc();
         getCacheTable().updateLocalCacheTable(baseInfoDescs);
         // 回调那些listener方法

@@ -19,10 +19,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author czf
@@ -56,12 +53,16 @@ public class ConnectionManager {
 
     private String address;
 
+    private Set<String> aliveServerAddressSet;
+
     // 静态内部类实现单例
     private ConnectionManager(){
         this.address = "127.0.0.1:2181";
         this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
         this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
+        this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
+        updateRpcProcessHandlerMap();
     }
 
     /**
@@ -118,6 +119,10 @@ public class ConnectionManager {
         final String host = addr[0];
         final int port = Integer.parseInt(addr[1]);
 
+        // 先将server更新
+        this.aliveServerAddressSet.add(address);
+
+        // 和指定server建立连接
         threadPoolExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -131,8 +136,9 @@ public class ConnectionManager {
                 future.addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
-                        if ( future.isSuccess() ){
                             // 连接成功之后
+                        if ( future.isSuccess() ) {
+                            log.info("rpc连接成功...开始addHandler");
                             RpcProcessHandler rpcProcessHandler = future.channel().pipeline().get(RpcProcessHandler.class);
                             addHandler(address, rpcProcessHandler);
                         }
@@ -179,17 +185,25 @@ public class ConnectionManager {
         // 2. 获取提供该接口服务的所有server的address
         List<String> addressList = serviceLocalDesc.getAddressList();
 
-        Sender sender = null;
-        int maxRetryTime = 4;
-        // 3. 随机的选取一个, 尝试从map里获取，如果获取不到说明被下线了，就重试，最大重试次数默认为4
-        while( sender==null && maxRetryTime-- > 0 ){
-            int idx = randomChoose.nextInt(addressList.size());
-            String addr = addressList.get(idx);
-            sender = rpcProcessHandlerMap.get(addr);
-        }
+        // 3. 随机的选取一个, 尝试从map里获取
+        int idx = randomChoose.nextInt(addressList.size());
+        String addr = addressList.get(idx);
+        Sender sender = rpcProcessHandlerMap.get(addr);
 
         if (sender==null){
-            throw new RuntimeException("获取sender失败，超过最大重试次数...");
+            if ( this.aliveServerAddressSet.contains(addr) == false ){
+                throw new RuntimeException("获取sender失败，不存在服务 或 服务尚未同步成功...");
+            }else{
+                log.warn("正在建立rpc连接，请稍后...");
+                while( sender==null ){
+                    sender = rpcProcessHandlerMap.get(addr);
+                    try {
+                        Thread.sleep(3*1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
 
         return sender;

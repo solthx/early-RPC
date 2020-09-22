@@ -1,5 +1,6 @@
 package com.earlyrpc.server.annotation;
 
+import jdk.nashorn.internal.ir.annotations.Reference;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.ElementType;
@@ -16,7 +17,11 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Component
 public @interface RpcService {
     Class<?> value();
+
+    String alias() default "";
+
+    String serviceName();
+
 }

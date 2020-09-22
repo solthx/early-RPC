@@ -71,6 +71,7 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
      */
     @Override
     public RpcResponsePromise sendRequest(final RpcRequest rpcRequest){
+        log.info("开始发送消息...{}", rpcRequest);
         RpcResponsePromise promise = new RpcResponsePromise();
         int requestId = rpcRequest.getRequestId();
         // 以requestId为key，存到map中，当收到response时，根据requestId进行获取并更新promise

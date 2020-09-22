@@ -2,6 +2,7 @@ package com.earlyrpc.server.handler;
 
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
+import com.earlyrpc.server.service.AliveService;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,12 +27,12 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
     /**
      * 提前实例化好的 实现了服务接口的 object对象
      */
-    private Map<String, Object> serviceBeanCache;
+    private Map<String, AliveService> aliveServiceMap;
 
     private ThreadPoolExecutor threadPoolExecutor;
 
-    public RpcCallbackHandler(Map<String, Object> serviceBeanCache, ThreadPoolExecutor threadPoolExecutor) {
-        this.serviceBeanCache = serviceBeanCache;
+    public RpcCallbackHandler(Map<String, AliveService> aliveServiceMap, ThreadPoolExecutor threadPoolExecutor) {
+        this.aliveServiceMap = aliveServiceMap;
         this.threadPoolExecutor = threadPoolExecutor;
     }
 
@@ -66,11 +67,13 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
      */
     private void handle(RpcRequest req, RpcResponse res) {
         String clazzName = req.getClazzName();
-        Object serviceBean = serviceBeanCache.get(clazzName);
-        if ( serviceBean == null ){
+        AliveService aliveService = aliveServiceMap.get(clazzName);
+        if ( aliveService == null ){
             res.setErrMsg("不存在指定服务 : " + clazzName);
             return;
         }
+
+        Object serviceBean = aliveService.getServiceBean();
         // 进行调用
         Class<?> serviceClass = serviceBean.getClass();
         String methodName = req.getMethodName();
@@ -103,5 +106,12 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
         // 填充response
         res.setResponseId(req.getRequestId());
         res.setReturnData(result);
+    }
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.warn("触发异常...{}",cause);
+        ctx.close();
     }
 }

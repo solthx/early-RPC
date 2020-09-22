@@ -3,8 +3,10 @@ package com.earlyrpc.server;
 import com.earlyrpc.registry.RpcRegistry;
 import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import com.earlyrpc.registry.description.remote.ProviderInfoDesc;
+import com.earlyrpc.registry.description.remote.ServiceInfoDesc;
 import com.earlyrpc.registry.zookeeper.ZKClient;
 import com.earlyrpc.server.handler.RpcServerChannelInitializer;
+import com.earlyrpc.server.service.AliveService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -63,17 +65,40 @@ public class RpcServer extends Server {
     /**
      * 预先实例化好那些实现了接口的serviceBean
      */
-    private Map<String, Object> serviceBeanCache;
+    private Map<String, AliveService> aliveServiceMap;
 
 
-    public RpcServer(String address, ProviderInfoDesc providerInfoDesc){
-        this.registryAddress = "127.0.0.1:2181"; // todo:change
-        this.localAddress = address;
-        this.providerInfoDesc = providerInfoDesc;
+    public RpcServer(String registryAddress, String localAddress, Map<String, AliveService> aliveServiceMap){
+        this.registryAddress = registryAddress; // todo:change
+        this.localAddress = localAddress;
+        this.providerInfoDesc = createProviderInfoDesc(aliveServiceMap);
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
         this.rpcRegistry = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
-        this.serviceBeanCache = new ConcurrentHashMap<>();
+        this.aliveServiceMap = aliveServiceMap;
+
+    }
+
+    private ProviderInfoDesc createProviderInfoDesc(Map<String, AliveService> aliveServiceMap){
+        ProviderInfoDesc providerInfoDesc = new ProviderInfoDesc(localAddress);
+
+        List<ServiceInfoDesc> serviceInfoDescList =
+                providerInfoDesc.getServiceInfoDescList();
+
+        for( Map.Entry<String, AliveService> entry:aliveServiceMap.entrySet() ){
+            String clazzName = entry.getKey();
+            AliveService aliveService = entry.getValue();
+
+            serviceInfoDescList.add(
+                    new ServiceInfoDesc(
+                            aliveService.getServiceName(),
+                            aliveService.getInterfaceName(),
+                            aliveService.getAlias()
+                    )
+            );
+        }
+
+        return providerInfoDesc;
     }
 
     /**
@@ -90,9 +115,9 @@ public class RpcServer extends Server {
                 try {
                     b.group(bossGroup, workerGroup)
                         .channel(NioServerSocketChannel.class)
-                        .childHandler(new RpcServerChannelInitializer(serviceBeanCache, threadPoolExecutor))
-                        .option(ChannelOption.SO_BACKLOG, 128)
-                        .childOption(ChannelOption.SO_KEEPALIVE, true); // todo:...
+                        .childHandler(new RpcServerChannelInitializer(aliveServiceMap, threadPoolExecutor));
+//                        .option(ChannelOption.SO_BACKLOG, 128)
+//                        .childOption(ChannelOption.SO_KEEPALIVE, true); // todo:...
 
                     String[] addr = localAddress.split(":");
 
@@ -104,6 +129,7 @@ public class RpcServer extends Server {
                     rpcRegistry.register(providerInfoDesc);
 
                     future.channel().closeFuture().sync();
+
                 } catch (Exception e) {
                     if ( e instanceof InterruptedException ){
                         log.warn("服务器启动时被中断...");
@@ -112,9 +138,9 @@ public class RpcServer extends Server {
                     }
                 } finally {
                     // 优雅关闭
-                    workerGroup.shutdownGracefully();
-                    bossGroup.shutdownGracefully();
-                    rpcRegistry.close();
+//                    workerGroup.shutdownGracefully();
+//                    bossGroup.shutdownGracefully();
+//                    rpcRegistry.close();
                 }
             }
         });
@@ -130,4 +156,7 @@ public class RpcServer extends Server {
             this.worker.interrupt();
         }
     }
+
+
+
 }

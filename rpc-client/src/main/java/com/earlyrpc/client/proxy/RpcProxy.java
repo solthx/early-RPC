@@ -86,7 +86,7 @@ public class RpcProxy implements InvocationHandler {
         RpcRequest req = new RpcRequest();
 //        req.setInterfaceName(desc.getInterfaceName());
         // todo: mock数据，之后修改
-        req.setClazzName("com.czf.service.export.HelloService");
+        req.setClazzName("com.earlyrpc.server.fake.HelloService");
 //        req.setClazzName(desc.getInterfaceName());
         req.setMethodName(method.getName());
         req.setParamTypeList(method.getParameterTypes());

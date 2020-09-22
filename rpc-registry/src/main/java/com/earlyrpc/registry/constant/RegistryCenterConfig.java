@@ -15,13 +15,14 @@ import javax.management.RuntimeErrorException;
  * @author czf
  * @Date 2020/8/25 10:59 下午
  */
-@Component
 public enum RegistryCenterConfig {
     REGISTRY_ROOT_TYPE("/erpc_registry"),
     PROVIDER_TYPE(REGISTRY_ROOT_TYPE.getPath()+"/provider"),
     CONSUMER_TYPE(REGISTRY_ROOT_TYPE.getPath()+"/consumer")
     ;
+
     private String path;
+
 
     RegistryCenterConfig(String path) {
         this.path = path;
