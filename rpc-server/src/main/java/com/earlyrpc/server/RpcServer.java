@@ -67,7 +67,7 @@ public class RpcServer extends Server {
 
 
     public RpcServer(String address, ProviderInfoDesc providerInfoDesc){
-        this.registryAddress = "127.0.0.1:2181";
+        this.registryAddress = "127.0.0.1:2181"; // todo:change
         this.localAddress = address;
         this.providerInfoDesc = providerInfoDesc;
         this.bossGroup = new NioEventLoopGroup();
