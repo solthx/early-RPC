@@ -114,7 +114,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         this.serializer = serializer;
         this.eventListeners = new ArrayList<CallBack>();
 
-        refreshLocalCacheTable();
+        refreshLocalCacheTable(); // 本地缓存初始化
     }
 
 

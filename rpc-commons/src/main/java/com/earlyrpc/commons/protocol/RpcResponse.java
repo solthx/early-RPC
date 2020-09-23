@@ -11,11 +11,12 @@ import lombok.Data;
  */
 @Data
 public class RpcResponse {
-//    private Long messageId;
-//    private Object returnData;
-//    private RpcResStateEnum state;
-
+    /* 响应Id 和请求Id相同 */
     private Integer responseId;
+
+    /* 调用返回结果 */
     private Object returnData;
+
+    /* 若调用发生异常，则返回错误信息，若调用成功则为空 */
     private String errMsg;
 }
