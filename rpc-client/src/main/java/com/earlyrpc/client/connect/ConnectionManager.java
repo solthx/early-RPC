@@ -29,8 +29,7 @@ import java.util.concurrent.*;
  * @Date 2020/8/18 9:49 下午
  */
 @Slf4j
-@Component
-public class ConnectionManager implements ApplicationListener<ApplicationEvent> {
+public class ConnectionManager {
 
     /**
      * 监听consumer节点
@@ -63,7 +62,7 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
     private ConnectionManager(){
         this.address = "127.0.0.1:2181";
 //        this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
-        this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE, "client-provider");
+        this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
         this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
         updateRpcProcessHandlerMap(); // 初始化channel连接
@@ -163,18 +162,6 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
      */
     private void addRpcChannel(String address, RpcChannel rpcChannel) {
         rpcChannelMap.put(address, rpcChannel);
-    }
-
-    /**
-     * 当spring容器关闭时，也关闭connectManager
-     *
-     * @param applicationEvent
-     */
-    @Override
-    public void onApplicationEvent(ApplicationEvent applicationEvent) {
-        if ( applicationEvent instanceof ContextClosedEvent){
-            this.close();
-        }
     }
 
 

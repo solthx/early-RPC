@@ -69,8 +69,6 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      */
     private Serializer serializer;
 
-    private String name;
-
     public ZKClient(String address, Integer sessionTimeout, RetryPolicy retryPolicy, String listeningRootPath, Serializer serializer) {
         this.address = address;
         this.sessionTimeout = sessionTimeout;
@@ -128,9 +126,8 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         this(address, 3000, path, serializer);
     }
 
-    public ZKClient(String address, RegistryCenterConfig path, String name) {
+    public ZKClient(String address, RegistryCenterConfig path) {
         this(address, 3000, path, new ProtoBufSerializer());
-        this.name = name;
     }
 
     /**
