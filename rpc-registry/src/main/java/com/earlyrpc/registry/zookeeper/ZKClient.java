@@ -8,8 +8,6 @@ import com.earlyrpc.registry.RpcRegistry;
 import com.earlyrpc.registry.constant.EventType;
 import com.earlyrpc.registry.constant.RegistryCenterConfig;
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
-import com.earlyrpc.registry.description.remote.ConsumerInfoDesc;
-import com.earlyrpc.registry.description.remote.ProviderInfoDesc;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -20,7 +18,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,8 +58,6 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
     private CuratorFramework cf;
 
-    private PathChildrenCache pathChildrenCache;
-
     /**
      * 所有需要回调的方法
      */
@@ -74,12 +69,12 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      */
     private Serializer serializer;
 
+    private String name;
 
     public ZKClient(String address, Integer sessionTimeout, RetryPolicy retryPolicy, String listeningRootPath, Serializer serializer) {
         this.address = address;
         this.sessionTimeout = sessionTimeout;
         this.retryPolicy = retryPolicy;
-
         cf = CuratorFrameworkFactory.builder()
                 .connectString(address)
                 .sessionTimeoutMs(sessionTimeout)
@@ -90,7 +85,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
         initZKPath();  // 初始化Zookeepr节点路径
 
-        pathChildrenCache = new PathChildrenCache(cf, listeningRootPath, true);
+        PathChildrenCache pathChildrenCache = new PathChildrenCache(cf, listeningRootPath, true);
 
         // 当有子节点发生改变时，就触发更新本地信息
         pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
@@ -113,7 +108,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         });
 
         try {
-            pathChildrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
+            pathChildrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         } catch (Exception e) {
             log.warn("pathChildCache初始化时异常{}",e.getMessage());
         }
@@ -133,14 +128,16 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         this(address, 3000, path, serializer);
     }
 
-    public ZKClient(String address, RegistryCenterConfig path) {
+    public ZKClient(String address, RegistryCenterConfig path, String name) {
         this(address, 3000, path, new ProtoBufSerializer());
+        this.name = name;
     }
 
     /**
      * 将重写的callback方法存入list
      * @param callBack
      */
+    @Override
     public void addListener(CallBack callBack){
         eventListeners.add(callBack);
     }
@@ -219,6 +216,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      *
      * @param desc
      */
+    @Override
     public void register(BaseInfoDesc desc) {
         // 1. 序列化
         byte[] descBytes = serializer.serialize(desc);
@@ -307,8 +305,8 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     @Override
     public void refreshLocalCacheTable() {
         // 若服务还没启起来
-        if ( !cf.getState().equals(CuratorFrameworkState.STARTED) )
-            return;
+//        if ( !cf.getState().equals(CuratorFrameworkState.STARTED) )
+//            return;
 
         List<BaseInfoDesc> baseInfoDescs = listRegisteredInfoDesc();
         getCacheTable().updateLocalCacheTable(baseInfoDescs);
@@ -318,12 +316,6 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
     @Override
     public void close() {
-        try {
-            pathChildrenCache.getListenable().clear();
-            pathChildrenCache.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         cf.close();
 
         log.info("zkClinet closed success...");

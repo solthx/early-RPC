@@ -22,6 +22,9 @@ public class RpcChannel {
         this.rpcProcessHandler = rpcProcessHandler;
     }
 
+    /**
+     * 关闭rpcChannel
+     */
     public void close(){
         try {
             channelFuture.channel().close().sync();

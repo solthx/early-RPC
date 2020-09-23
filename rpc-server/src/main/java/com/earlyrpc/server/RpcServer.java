@@ -74,7 +74,7 @@ public class RpcServer extends Server {
         this.providerInfoDesc = createProviderInfoDesc(aliveServiceMap);
         this.bossGroup = new NioEventLoopGroup();
         this.workerGroup = new NioEventLoopGroup();
-        this.rpcRegistry = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
+        this.rpcRegistry = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE,"server-provider");
         this.aliveServiceMap = aliveServiceMap;
 
     }

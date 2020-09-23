@@ -35,7 +35,7 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
     /**
      * 监听consumer节点
      */
-    private ZKClient consumerManager;
+//    private ZKClient consumerManager;
 
     /**
      * 监听provider节点
@@ -62,8 +62,8 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
     // 静态内部类实现单例
     private ConnectionManager(){
         this.address = "127.0.0.1:2181";
-        this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
-        this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
+//        this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
+        this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE, "client-provider");
         this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
         updateRpcProcessHandlerMap(); // 初始化channel连接
@@ -90,11 +90,11 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
     private void updateRpcProcessHandlerMap() {
         List<String> newProviderServerAddressList = this.providerManager.getCacheTable().getProviderServerAddressList();
 
-        Set<String> serverAddressSet = rpcChannelMap.keySet();
+        Set<String> oldServerAddressSet = rpcChannelMap.keySet();
 
         // 加入新的
         for( String address:newProviderServerAddressList ){
-            if ( serverAddressSet.contains(address) == false ){
+            if ( oldServerAddressSet.contains(address) == false ){
                 connectServerNode(address);
             }
         }
@@ -102,19 +102,20 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
         HashSet<String> newAddressSet = new HashSet<>(newProviderServerAddressList);
 
         // 删除下线的
-        for( String address:serverAddressSet ){
+        for( String address:oldServerAddressSet ){
             if ( newAddressSet.contains(address) == false ){
                 RpcProcessHandler rpcProcessHandler = rpcChannelMap.get(address).getRpcProcessHandler();
                 rpcChannelMap.remove(address);
                 if (rpcProcessHandler!=null) {
                     rpcProcessHandler.close();
                 }
+                log.info("delete invalid service-server : {}", address);
             }
         }
     }
 
     /**
-     * 和 address 建立channel，更新到map里
+     * 和address 建立channel，更新到map里
      *
      * @param address
      */
@@ -215,11 +216,11 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
                 log.warn("正在建立rpc连接，请稍后...");
                 while( rpcChannel==null ){
                     rpcChannel = rpcChannelMap.get(addr);
-                    try {
-                        Thread.sleep(3*1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        Thread.sleep(3*1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                 }
             }
         }
@@ -231,7 +232,7 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
      * 关闭当前connectManager
      */
     public void close(){
-        consumerManager.close();
+//        consumerManager.close();
         providerManager.close();
         threadPoolExecutor.shutdown();
         for( RpcChannel rpcChannel:rpcChannelMap.values() ){
@@ -241,12 +242,4 @@ public class ConnectionManager implements ApplicationListener<ApplicationEvent> 
         log.info("connectManager关闭..");
     }
 
-    public static void main(String[] args) {
-        System.out.println("...");
-
-        Scanner in = new Scanner(System.in);
-        int i = in.nextInt();
-
-
-    }
 }

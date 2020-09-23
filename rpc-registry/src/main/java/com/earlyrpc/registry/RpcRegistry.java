@@ -3,7 +3,9 @@ package com.earlyrpc.registry;
 import com.earlyrpc.registry.description.remote.BaseInfoDesc;
 
 /**
- * 注册
+ * 注册中心的几个作用:
+ *      1. 对服务的增删改查
+ *      2. 对服务变化的监听
  *
  * @author: czf
  * @date: 2020/8/19 21:03
@@ -36,4 +38,12 @@ public interface RpcRegistry {
     void delete(BaseInfoDesc baseInfoDesc);
 
     void close();
+
+    /**
+     * 添加监听器
+     * @param callBack
+     */
+    void addListener(CallBack callBack);
+
+
 }

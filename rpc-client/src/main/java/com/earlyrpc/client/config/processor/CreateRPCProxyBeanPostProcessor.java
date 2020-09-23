@@ -44,7 +44,6 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
             // 注册rpc动态代理对象到底层容器
             beanFactory.registerSingleton(beanName, rpcProxy);
         }
-        //todo: 作为consumer，注册自己到zk上
     }
 
     /**
