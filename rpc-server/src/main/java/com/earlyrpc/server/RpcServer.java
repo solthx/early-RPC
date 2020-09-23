@@ -138,9 +138,9 @@ public class RpcServer extends Server {
                     }
                 } finally {
                     // 优雅关闭
-//                    workerGroup.shutdownGracefully();
-//                    bossGroup.shutdownGracefully();
-//                    rpcRegistry.close();
+                    workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully();
+                    rpcRegistry.close();
                 }
             }
         });

@@ -317,11 +317,14 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
     @Override
     public void close() {
-        cf.close();
         try {
+            pathChildrenCache.getListenable().clear();
             pathChildrenCache.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        cf.close();
+
+        log.info("zkClinet closed success...");
     }
 }

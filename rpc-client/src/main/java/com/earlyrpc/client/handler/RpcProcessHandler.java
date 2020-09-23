@@ -6,6 +6,7 @@ import com.earlyrpc.commons.protocol.RpcResponse;
 import com.earlyrpc.commons.utils.async.RpcResponsePromise;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -19,12 +20,13 @@ import java.util.concurrent.CountDownLatch;
  * @Date 2020/8/18 8:40 下午
  */
 @Slf4j
+@Data
 public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> implements Sender {
 
     /* 用于发送消息的通道 */
     private volatile Channel channel;
 
-    /* 保存正在等待的promise */
+    /* 保存正在等待的promise (发出request之后，尚未收到response的那些消息) */
     private Map<Integer, RpcResponsePromise> promiseMap = new ConcurrentHashMap<>(16);
 
 

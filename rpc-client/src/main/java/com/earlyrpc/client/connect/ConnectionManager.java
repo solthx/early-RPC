@@ -14,19 +14,23 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.*;
 
 /**
+ * 管理当前客户端与rpcServer的长连接
+ *
  * @author czf
  * @Date 2020/8/18 9:49 下午
  */
 @Slf4j
-public class ConnectionManager {
+@Component
+public class ConnectionManager implements ApplicationListener<ApplicationEvent> {
 
     /**
      * 监听consumer节点
@@ -44,7 +48,7 @@ public class ConnectionManager {
     /**
      * 需要进行通信的channelMap, key是ip, value对应找到channel
      */
-    private Map<String, RpcProcessHandler> rpcProcessHandlerMap = new ConcurrentHashMap<>();
+    private Map<String, RpcChannel> rpcChannelMap = new ConcurrentHashMap<>();
 
     private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
             4,8, 600L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(1000));
@@ -62,7 +66,7 @@ public class ConnectionManager {
         this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
         this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
-        updateRpcProcessHandlerMap();
+        updateRpcProcessHandlerMap(); // 初始化channel连接
     }
 
     /**
@@ -86,7 +90,7 @@ public class ConnectionManager {
     private void updateRpcProcessHandlerMap() {
         List<String> newProviderServerAddressList = this.providerManager.getCacheTable().getProviderServerAddressList();
 
-        Set<String> serverAddressSet = rpcProcessHandlerMap.keySet();
+        Set<String> serverAddressSet = rpcChannelMap.keySet();
 
         // 加入新的
         for( String address:newProviderServerAddressList ){
@@ -100,9 +104,11 @@ public class ConnectionManager {
         // 删除下线的
         for( String address:serverAddressSet ){
             if ( newAddressSet.contains(address) == false ){
-                RpcProcessHandler rpcProcessHandler = rpcProcessHandlerMap.get(address);
-                rpcProcessHandlerMap.remove(address);
-                rpcProcessHandler.close();
+                RpcProcessHandler rpcProcessHandler = rpcChannelMap.get(address).getRpcProcessHandler();
+                rpcChannelMap.remove(address);
+                if (rpcProcessHandler!=null) {
+                    rpcProcessHandler.close();
+                }
             }
         }
     }
@@ -138,9 +144,9 @@ public class ConnectionManager {
                     public void operationComplete(ChannelFuture future) throws Exception {
                             // 连接成功之后
                         if ( future.isSuccess() ) {
-                            log.info("rpc连接成功...开始addHandler");
+                            log.info("rpc连接成功...开始addChannel");
                             RpcProcessHandler rpcProcessHandler = future.channel().pipeline().get(RpcProcessHandler.class);
-                            addHandler(address, rpcProcessHandler);
+                            addRpcChannel(address, new RpcChannel(future, rpcProcessHandler));
                         }
                     }
                 });
@@ -152,10 +158,22 @@ public class ConnectionManager {
     /**
      * connect成功之后，将 handler 给 add 到 map中
      * @param address
-     * @param rpcProcessHandler
+     * @param rpcChannel
      */
-    private void addHandler(String address, RpcProcessHandler rpcProcessHandler) {
-        rpcProcessHandlerMap.put(address, rpcProcessHandler);
+    private void addRpcChannel(String address, RpcChannel rpcChannel) {
+        rpcChannelMap.put(address, rpcChannel);
+    }
+
+    /**
+     * 当spring容器关闭时，也关闭connectManager
+     *
+     * @param applicationEvent
+     */
+    @Override
+    public void onApplicationEvent(ApplicationEvent applicationEvent) {
+        if ( applicationEvent instanceof ContextClosedEvent){
+            this.close();
+        }
     }
 
 
@@ -188,15 +206,15 @@ public class ConnectionManager {
         // 3. 随机的选取一个, 尝试从map里获取
         int idx = randomChoose.nextInt(addressList.size());
         String addr = addressList.get(idx);
-        Sender sender = rpcProcessHandlerMap.get(addr);
+        RpcChannel rpcChannel = rpcChannelMap.get(addr);
 
-        if (sender==null){
+        if (rpcChannel==null){
             if ( this.aliveServerAddressSet.contains(addr) == false ){
-                throw new RuntimeException("获取sender失败，不存在服务 或 服务尚未同步成功...");
+                log.warn("获取sender失败，不存在服务...");
             }else{
                 log.warn("正在建立rpc连接，请稍后...");
-                while( sender==null ){
-                    sender = rpcProcessHandlerMap.get(addr);
+                while( rpcChannel==null ){
+                    rpcChannel = rpcChannelMap.get(addr);
                     try {
                         Thread.sleep(3*1000);
                     } catch (InterruptedException e) {
@@ -205,13 +223,30 @@ public class ConnectionManager {
                 }
             }
         }
-
-        return sender;
+        return rpcChannel.getRpcProcessHandler();
     }
 
-    public void stop(){
+
+    /**
+     * 关闭当前connectManager
+     */
+    public void close(){
         consumerManager.close();
         providerManager.close();
         threadPoolExecutor.shutdown();
+        for( RpcChannel rpcChannel:rpcChannelMap.values() ){
+            rpcChannel.close();
+        }
+        group.shutdownGracefully();
+        log.info("connectManager关闭..");
+    }
+
+    public static void main(String[] args) {
+        System.out.println("...");
+
+        Scanner in = new Scanner(System.in);
+        int i = in.nextInt();
+
+
     }
 }

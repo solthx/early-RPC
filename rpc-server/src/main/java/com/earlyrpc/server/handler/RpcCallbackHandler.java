@@ -112,6 +112,7 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.warn("触发异常...{}",cause);
+        System.out.println(ctx.name());
         ctx.close();
     }
 }
