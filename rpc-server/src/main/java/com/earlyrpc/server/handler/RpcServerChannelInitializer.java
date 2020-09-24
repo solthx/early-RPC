@@ -2,10 +2,13 @@ package com.earlyrpc.server.handler;
 
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
+import com.earlyrpc.commons.protocol.handler.RpcDecodeHandler;
+import com.earlyrpc.commons.protocol.handler.RpcEncodeHandler;
 import com.earlyrpc.server.service.AliveService;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
@@ -29,6 +32,7 @@ public class RpcServerChannelInitializer extends ChannelInitializer<SocketChanne
 
     protected void initChannel(SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0,0));
         pipeline.addLast(new RpcDecodeHandler(RpcRequest.class));
         pipeline.addLast(new RpcEncodeHandler(RpcResponse.class));
         pipeline.addLast(new RpcCallbackHandler(aliveServiceMap, threadPoolExecutor));

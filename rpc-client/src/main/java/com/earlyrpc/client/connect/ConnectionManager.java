@@ -89,11 +89,11 @@ public class ConnectionManager {
     private void updateRpcProcessHandlerMap() {
         List<String> newProviderServerAddressList = this.providerManager.getCacheTable().getProviderServerAddressList();
 
-        Set<String> serverAddressSet = rpcProcessHandlerMap.keySet();
+        Set<String> oldServerAddressSet = rpcChannelMap.keySet();
 
         // 加入新的
         for( String address:newProviderServerAddressList ){
-            if ( serverAddressSet.contains(address) == false ){
+            if ( oldServerAddressSet.contains(address) == false ){
                 connectServerNode(address);
             }
         }
@@ -101,17 +101,20 @@ public class ConnectionManager {
         HashSet<String> newAddressSet = new HashSet<>(newProviderServerAddressList);
 
         // 删除下线的
-        for( String address:serverAddressSet ){
+        for( String address:oldServerAddressSet ){
             if ( newAddressSet.contains(address) == false ){
-                RpcProcessHandler rpcProcessHandler = rpcProcessHandlerMap.get(address);
-                rpcProcessHandlerMap.remove(address);
-                rpcProcessHandler.close();
+                RpcProcessHandler rpcProcessHandler = rpcChannelMap.get(address).getRpcProcessHandler();
+                rpcChannelMap.remove(address);
+                if (rpcProcessHandler!=null) {
+                    rpcProcessHandler.close();
+                }
+                log.info("delete invalid service-server : {}", address);
             }
         }
     }
 
     /**
-     * 和 address 建立channel，更新到map里
+     * 和address 建立channel，更新到map里
      *
      * @param address
      */
@@ -141,9 +144,9 @@ public class ConnectionManager {
                     public void operationComplete(ChannelFuture future) throws Exception {
                             // 连接成功之后
                         if ( future.isSuccess() ) {
-                            log.info("rpc连接成功...开始addHandler");
+                            log.info("rpc连接成功...开始addChannel");
                             RpcProcessHandler rpcProcessHandler = future.channel().pipeline().get(RpcProcessHandler.class);
-                            addHandler(address, rpcProcessHandler);
+                            addRpcChannel(address, new RpcChannel(future, rpcProcessHandler));
                         }
                     }
                 });
@@ -155,10 +158,10 @@ public class ConnectionManager {
     /**
      * connect成功之后，将 handler 给 add 到 map中
      * @param address
-     * @param rpcProcessHandler
+     * @param rpcChannel
      */
-    private void addHandler(String address, RpcProcessHandler rpcProcessHandler) {
-        rpcProcessHandlerMap.put(address, rpcProcessHandler);
+    private void addRpcChannel(String address, RpcChannel rpcChannel) {
+        rpcChannelMap.put(address, rpcChannel);
     }
 
 
@@ -191,30 +194,39 @@ public class ConnectionManager {
         // 3. 随机的选取一个, 尝试从map里获取
         int idx = randomChoose.nextInt(addressList.size());
         String addr = addressList.get(idx);
-        Sender sender = rpcProcessHandlerMap.get(addr);
+        RpcChannel rpcChannel = rpcChannelMap.get(addr);
 
-        if (sender==null){
+        if (rpcChannel==null){
             if ( this.aliveServerAddressSet.contains(addr) == false ){
-                throw new RuntimeException("获取sender失败，不存在服务 或 服务尚未同步成功...");
+                log.warn("获取sender失败，不存在服务...");
             }else{
                 log.warn("正在建立rpc连接，请稍后...");
-                while( sender==null ){
-                    sender = rpcProcessHandlerMap.get(addr);
-                    try {
-                        Thread.sleep(3*1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                while( rpcChannel==null ){
+                    rpcChannel = rpcChannelMap.get(addr);
+//                    try {
+//                        Thread.sleep(3*1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                 }
             }
         }
-
-        return sender;
+        return rpcChannel.getRpcProcessHandler();
     }
 
-    public void stop(){
-        consumerManager.close();
+
+    /**
+     * 关闭当前connectManager
+     */
+    public void close(){
+//        consumerManager.close();
         providerManager.close();
         threadPoolExecutor.shutdown();
+        for( RpcChannel rpcChannel:rpcChannelMap.values() ){
+            rpcChannel.close();
+        }
+        group.shutdownGracefully();
+        log.info("connectManager关闭..");
     }
+
 }

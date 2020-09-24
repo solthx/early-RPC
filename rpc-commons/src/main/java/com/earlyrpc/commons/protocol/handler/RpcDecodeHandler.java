@@ -1,10 +1,12 @@
 package com.earlyrpc.commons.protocol.handler;
 
+import com.earlyrpc.commons.protocol.EarlyRpcProtocol;
 import com.earlyrpc.commons.serializer.Serializer;
 import com.earlyrpc.commons.serializer.SerializerChooser;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -12,14 +14,15 @@ import java.util.List;
  * @author czf
  * @Date 2020/9/23 11:10 下午
  */
-public class RpcDecoderHandler extends ByteToMessageDecoder {
+@Slf4j
+public class RpcDecodeHandler extends ByteToMessageDecoder {
 
     /**
      * 协议体的类对象
      */
     private Class<?> protocolBodyClass;
 
-    public RpcDecoderHandler(Class<?> protocolBodyClass) {
+    public RpcDecodeHandler(Class<?> protocolBodyClass) {
         this.protocolBodyClass = protocolBodyClass;
     }
 
@@ -41,28 +44,52 @@ public class RpcDecoderHandler extends ByteToMessageDecoder {
      */
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+        if (byteBuf.readableBytes() < 4) {
+            return;
+        }
+        log.debug("provider server has received rpc message successfully...\n processing...");
 
+        byteBuf.markReaderIndex();
+        // 消息总长度
         int messageLength = byteBuf.readInt();
+
+        byte magicCode = byteBuf.readByte();
+
+        if ( magicCode != EarlyRpcProtocol.MAGIC_CODE ){
+            // 如果不是earlyRpc协议，则不处理
+            byteBuf.resetReaderIndex();
+            return ;
+        }
+
         // 协议头长度
         short protocolHeaderLength = byteBuf.readShort();
+
         // 协议头
         ByteBuf protocolHeaderByteBuf = byteBuf.readBytes(protocolHeaderLength);
 
         // 协议版本号
         Byte version = protocolHeaderByteBuf.readByte();
-
         // 消息类型
         Byte messageType = protocolHeaderByteBuf.readByte();
-
         // 序列化方式
         Byte serializeType = protocolHeaderByteBuf.readByte();
         Serializer serializer = SerializerChooser.choose(serializeType);
 
-        // 获取协议体
-        byte [] protocolBodyBytes = new byte[(messageLength-protocolHeaderLength)];
+        // 获取协议体 = 总长度 - 协议头长度(protocolHeaderLength) - 协议头长度的长度(short=2字节) - 魔数长度(1字节)
+        //           = 总长度 - 协议头长度(protocolHeaderLength) - 3
+        byte [] protocolBodyBytes = new byte[(messageLength-protocolHeaderLength-3)];
         byteBuf.readBytes(protocolBodyBytes);
         Object protocolBody = serializer.deserialize(protocolBodyBytes, protocolBodyClass);
 
         list.add(protocolBody);
+
+        log.warn("receive message content: \n"
+                +"\tmessageLength:{},\n"
+                +"\tprotocolHeaderLength:{}\n"
+                +"\tversion:{},\n"
+                +"\tmessageType:{},\n"
+                +"\tserializeType:{},\n"
+                +"\tprotocolBody:{}", messageLength, protocolHeaderLength,version,messageType, serializeType,protocolBody);
+
     }
 }
