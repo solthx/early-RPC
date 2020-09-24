@@ -69,7 +69,7 @@ public class RpcServer extends Server {
 
 
     public RpcServer(String registryAddress, String localAddress, Map<String, AliveService> aliveServiceMap){
-        this.registryAddress = registryAddress; // todo:change
+        this.registryAddress = registryAddress;
         this.localAddress = localAddress;
         this.providerInfoDesc = createProviderInfoDesc(aliveServiceMap);
         this.bossGroup = new NioEventLoopGroup();

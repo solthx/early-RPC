@@ -1,5 +1,6 @@
 package com.earlyrpc.client.config;
 
+import com.earlyrpc.client.enums.Prefix;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
@@ -29,5 +30,8 @@ public class ConsumerBeanDefinitionParser extends AbstractSingleBeanDefinitionPa
 
         String protocal = element.getAttribute("protocal");
         bean.addConstructorArgValue(protocal);
+
+        // 通过修改id标签来间接确定description对应的beanName的值
+        element.setAttribute("id", Prefix.ERPC_CONSUMER_BEANNAME_PREFIX+element.getAttribute("id"));
     }
 }
