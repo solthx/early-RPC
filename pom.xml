@@ -14,6 +14,7 @@
         <module>rpc-client</module>
         <module>rpc-commons</module>
         <module>rpc-registry</module>
+        <module>rpc-export</module>
     </modules>
 
 

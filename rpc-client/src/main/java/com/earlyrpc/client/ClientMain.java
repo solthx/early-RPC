@@ -15,14 +15,14 @@ import org.springframework.stereotype.Component;
 @Data
 public class ClientMain {
 
-    @RemoteInvoke
+//    @RemoteInvoke
     private HelloService helloService;
 
     public static void main(String[] args) {
         ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring.xml");
-//        HelloService bean = (HelloService) applicationContext.getBean("helloService");
-        ClientMain clientMain = (ClientMain) applicationContext.getBean("clientMain");
-        HelloService bean = clientMain.getHelloService();
+        HelloService bean = (HelloService) applicationContext.getBean("helloService");
+//        ClientMain clientMain = (ClientMain) applicationContext.getBean("clientMain");
+//        HelloService bean = clientMain.getHelloService();
 
 
 //        String res = null;

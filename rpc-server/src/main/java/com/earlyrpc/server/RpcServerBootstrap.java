@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -23,9 +24,11 @@ public class RpcServerBootstrap implements ApplicationContextAware, Initializing
 
     private RpcServer rpcServer;
 
-    private String localAddress = "127.0.0.1:9771"; //todo: change
+    @Value("${erpc.provider.localAddress}")
+    private String localAddress;
 
-    private String registryAddress = "127.0.0.1:2181"; // todo:change
+    @Value("${erpc.registry.address}")
+    private String registryAddress;
 
     private ApplicationContext applicationContext;
 
