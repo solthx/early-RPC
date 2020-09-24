@@ -13,6 +13,7 @@ import java.util.List;
  * @author czf
  * @Date 2020/8/15 9:41 下午
  */
+@Deprecated
 public class RpcDecoder extends ByteToMessageDecoder {
 
     /* 将字节流解码成baseClazz对象 */

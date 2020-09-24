@@ -1,5 +1,6 @@
 package com.earlyrpc.client.handler;
 
+import com.alibaba.fastjson.JSONObject;
 import com.earlyrpc.client.connect.Sender;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * rpc协议业务处理handler
@@ -37,6 +37,7 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
      */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        log.debug("a new channel has been registered.");
         super.channelRegistered(ctx);
         this.channel = ctx.channel();
     }
@@ -49,14 +50,14 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
      */
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcResponse rpcResponse) throws Exception {
+        log.debug("received a rpc-response: {}", JSONObject.toJSON(rpcResponse));
         Integer responseId = rpcResponse.getResponseId();
-        System.out.println("request:"+responseId);
         RpcResponsePromise promise = promiseMap.get(responseId);
         if (promise!=null) {
             promise.setSuccess(rpcResponse);
             promiseMap.remove(responseId); // 从map中删除
         }else{
-            log.error("pomiseId:{} 不存在",responseId);
+            log.error("pomiseId:{} not found in promiseMap",responseId);
         }
     }
 
@@ -73,16 +74,16 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
      */
     @Override
     public RpcResponsePromise sendRequest(final RpcRequest rpcRequest){
-        log.info("开始发送消息...{}", rpcRequest);
+        log.debug("send a rpc-request: {}", JSONObject.toJSON(rpcRequest));
         RpcResponsePromise promise = new RpcResponsePromise();
-        int requestId = rpcRequest.getRequestId();
+        final int requestId = rpcRequest.getRequestId();
         // 以requestId为key，存到map中，当收到response时，根据requestId进行获取并更新promise
         promiseMap.put(requestId, promise);
         channel.writeAndFlush(rpcRequest).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()){
-                    log.error("rpc请求发送失败: {}", rpcRequest);
+                    log.error("rpc-request sending failed, the request content is: {}", JSONObject.toJSON(rpcRequest));
                 }
             }
         });

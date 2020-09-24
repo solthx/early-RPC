@@ -21,7 +21,7 @@ public class RpcProxyCreator {
             Class<?> interfaceClazz = Class.forName(interfaceName);
             proxyEntity = createProxy(interfaceClazz, consumerDesc);
         } catch (ClassNotFoundException e) {
-            log.error("未找到接口: {}", interfaceName);
+            log.error("not found the interface : {}", interfaceName);
             e.printStackTrace();
         }
         return proxyEntity;

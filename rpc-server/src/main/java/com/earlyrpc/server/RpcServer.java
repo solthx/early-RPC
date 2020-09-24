@@ -132,9 +132,9 @@ public class RpcServer extends Server {
 
                 } catch (Exception e) {
                     if ( e instanceof InterruptedException ){
-                        log.warn("服务器启动时被中断...");
+                        log.warn("service-server is interrupted during launching...");
                     }else {
-                        log.warn("出现异常{}", e);
+                        log.warn("unknown exception : {}", e);
                     }
                 } finally {
                     // 优雅关闭

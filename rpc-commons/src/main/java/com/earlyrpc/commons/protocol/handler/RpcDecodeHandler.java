@@ -47,7 +47,6 @@ public class RpcDecodeHandler extends ByteToMessageDecoder {
         if (byteBuf.readableBytes() < 4) {
             return;
         }
-        log.debug("provider server has received rpc message successfully...\n processing...");
 
         byteBuf.markReaderIndex();
         // 消息总长度
@@ -83,7 +82,7 @@ public class RpcDecodeHandler extends ByteToMessageDecoder {
 
         list.add(protocolBody);
 
-        log.warn("receive message content: \n"
+        log.debug("received a message : \n"
                 +"\tmessageLength:{},\n"
                 +"\tprotocolHeaderLength:{}\n"
                 +"\tversion:{},\n"

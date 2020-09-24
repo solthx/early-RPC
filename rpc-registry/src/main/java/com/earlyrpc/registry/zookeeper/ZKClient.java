@@ -90,15 +90,15 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
             public void childEvent(CuratorFramework cf, PathChildrenCacheEvent event) throws Exception {
                 switch (event.getType()) {
                     case CHILD_ADDED:
-                        log.info("有新服务上线!, 服务标识为：{}", new String(event.getData().getData()));
+                        log.info("a new service become online... the content is：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                     case CHILD_REMOVED:
-                        log.info("有服务下线, 服务标识为：{}", new String(event.getData().getData()));
+                        log.info("a service become down... the content is：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                     case CHILD_UPDATED:
-                        log.info("监听到新服务更新, 服务标识为：{}", new String(event.getData().getData()));
+                        log.info("a service had been updated... the content is：{}", new String(event.getData().getData()));
                         refreshLocalCacheTable(); // 更新本地缓存
                         break;
                 }
@@ -108,7 +108,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         try {
             pathChildrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         } catch (Exception e) {
-            log.warn("pathChildCache初始化时异常{}",e.getMessage());
+            log.warn("pathChildCache has an exception during initialization , the errMsg is: {}",e.getMessage());
         }
 
         this.serializer = serializer;
@@ -228,10 +228,10 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
                     cf.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(nodePath, descBytes);
                 }
             } catch (Exception e) {
-                log.warn("注册时异常, 创建zk节点时出现异常：{}",e.getMessage());
+                log.warn("throw an exception when creating ZK node, the errMsg is：[{}]",e.getMessage());
             }
         }else{
-            log.warn("{}注册失败.", desc);
+            log.warn("[{}] register failed.", desc);
         }
     }
 
@@ -247,7 +247,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         try {
             cf.setData().forPath(path, bytesData);
         } catch (Exception e) {
-            log.warn(" {} 在更新时出现异常. 异常信息为 {} ", path, e.getMessage());
+            log.warn(" [{}] exception occurred during update. The exception information is [{}] ", path, e.getMessage());
         }
     }
 
@@ -264,7 +264,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
                 update(baseInfoDesc.getZkAbsolutePath(), baseInfoDesc);
             }
         } catch (Exception e) {
-            log.warn("进行checkExsits操作时出现异常, 节点信息: {}, 异常信息: {}",baseInfoDesc, e.getMessage());
+            log.warn("Exception occurred during checkExits operation, node information: [{}], exception information: [{}]",baseInfoDesc, e.getMessage());
         }
     }
 
@@ -278,7 +278,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         try {
             cf.delete().forPath(key);
         } catch (Exception e) {
-            log.warn("节点 {} 在删除时出现异常, 异常信息为 {}", key, e.getMessage());
+            log.warn("Exception occurred when the node [{}] was deleted. The exception information is [{}]", key, e.getMessage());
         }
     }
 
@@ -292,7 +292,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
         try {
             cf.delete().forPath(baseInfoDesc.getZkAbsolutePath());
         } catch (Exception e) {
-            log.warn("节点 {} 在删除时出现异常, 异常信息为 {}", baseInfoDesc.getZkAbsolutePath(), e.getMessage());
+            log.warn("Exception occurred when node [{}] was deleted. The exception information is [{}]", baseInfoDesc.getZkAbsolutePath(), e.getMessage());
         }
     }
 
@@ -314,7 +314,6 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     @Override
     public void close() {
         cf.close();
-
         log.info("zkClinet closed success...");
     }
 }

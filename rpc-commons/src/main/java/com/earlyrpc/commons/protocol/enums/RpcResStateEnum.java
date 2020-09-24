@@ -6,6 +6,7 @@ package com.earlyrpc.commons.protocol.enums;
  * @author czf
  * @Date 2020/8/15 9:15 下午
  */
+@Deprecated
 public enum  RpcResStateEnum {
     SUCCESS(0,"成功"),
 

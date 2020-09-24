@@ -39,7 +39,7 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
             // 在这里生成动态代理对象
             Object rpcProxy = RpcProxyCreator.createProxy(desc);
             if (rpcProxy==null){
-                throw new RuntimeException("接口: "+interfaceName+"的动态代理对象创建失败...");
+                log.warn("create proxyObject failed, the interface is named : {}", interfaceName);
             }
             // 注册rpc动态代理对象到底层容器
             beanFactory.registerSingleton(beanName, rpcProxy);

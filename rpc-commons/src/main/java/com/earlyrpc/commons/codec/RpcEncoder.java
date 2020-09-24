@@ -11,6 +11,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * @author czf
  * @Date 2020/8/15 10:27 下午
  */
+@Deprecated
 public class RpcEncoder extends MessageToByteEncoder {
     private Class<?> baseClass;
     private Serializer serializer;

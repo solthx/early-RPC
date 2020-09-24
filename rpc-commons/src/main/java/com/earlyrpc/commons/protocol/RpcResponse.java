@@ -1,6 +1,5 @@
 package com.earlyrpc.commons.protocol;
 
-import com.earlyrpc.commons.protocol.enums.RpcResStateEnum;
 import lombok.Data;
 
 /**

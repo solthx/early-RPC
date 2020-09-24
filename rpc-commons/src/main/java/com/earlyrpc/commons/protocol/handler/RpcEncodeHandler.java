@@ -50,9 +50,6 @@ public class RpcEncodeHandler extends MessageToByteEncoder {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Object protocolBody, ByteBuf byteBuf) throws Exception {
 
-        log.warn("provider server start sending rpc message ...\n processing...");
-
-
         // 只对protocolBodyClass的类型进行处理
         if ( protocolBody.getClass().equals(protocolBodyClass)  ){
 
@@ -85,7 +82,7 @@ public class RpcEncodeHandler extends MessageToByteEncoder {
             byteBuf.writeByte(serializeType);               // 1
             byteBuf.writeBytes(protocolBodyBytes);          // ?
 
-            log.warn("send message content: \n"
+            log.warn("send a message : \n"
             +"\tmessageLength:{},\n"
             +"\tprotocolHeaderLength:{}\n"
             +"\tversion:{},\n"

@@ -12,7 +12,6 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
 /**
- *
  * @author: czf
  * @date: 2020/9/21 16:58
  */
@@ -37,6 +36,5 @@ public class RpcProcessInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new RpcDecodeHandler(RpcResponse.class));
         pipeline.addLast(new RpcProcessHandler());
         pipeline.addLast(new LoggingHandler(LogLevel.INFO));
-
     }
 }

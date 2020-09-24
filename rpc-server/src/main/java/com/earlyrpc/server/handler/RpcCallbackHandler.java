@@ -49,7 +49,7 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (future.isSuccess()){
-                            log.info("response 已发送完毕... {} ", response.getReturnData());
+                            log.info("response send finished... {} ", response.getReturnData());
                         }
                     }
                 });
@@ -69,7 +69,7 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
         String clazzName = req.getClazzName();
         AliveService aliveService = aliveServiceMap.get(clazzName);
         if ( aliveService == null ){
-            res.setErrMsg("不存在指定服务 : " + clazzName);
+            res.setErrMsg("the interface [" + clazzName +"] not found.");
             return;
         }
 
@@ -100,7 +100,7 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
                 e.printStackTrace();
             }
         }else{
-            res.setErrMsg("当前server不存在这个服务: "+clazzName);
+            res.setErrMsg("the interface [" + clazzName +"] not found.");
         }
 
         // 填充response

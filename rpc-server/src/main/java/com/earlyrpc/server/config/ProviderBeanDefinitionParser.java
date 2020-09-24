@@ -18,6 +18,6 @@ public class ProviderBeanDefinitionParser extends AbstractSingleBeanDefinitionPa
     }
 
     protected void doParse(Element element, BeanDefinitionBuilder bean) {
-        // todo: 补充
+        // todo
     }
 }

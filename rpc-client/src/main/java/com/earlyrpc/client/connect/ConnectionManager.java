@@ -14,10 +14,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -65,7 +61,7 @@ public class ConnectionManager {
         this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
         this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
-        updateRpcProcessHandlerMap(); // 初始化channel连接
+        refreshRpcChannelMap(); // 初始化channel连接
     }
 
     /**
@@ -77,7 +73,7 @@ public class ConnectionManager {
             public void callback(EventType event) {
                 if ( event.equals(EventType.AFTER_UPDATE_CACHETABLE) ){
                     // provider发生了更新, 此时需要对channels也进行更新
-                    updateRpcProcessHandlerMap();
+                    refreshRpcChannelMap();
                 }
             }
         });
@@ -86,7 +82,9 @@ public class ConnectionManager {
     /**
      * 根据provider更新rpcProcessHandlerMap
      */
-    private void updateRpcProcessHandlerMap() {
+    private void refreshRpcChannelMap() {
+        log.debug("rpc channels start to refresh...");
+
         List<String> newProviderServerAddressList = this.providerManager.getCacheTable().getProviderServerAddressList();
 
         Set<String> oldServerAddressSet = rpcChannelMap.keySet();
@@ -94,6 +92,7 @@ public class ConnectionManager {
         // 加入新的
         for( String address:newProviderServerAddressList ){
             if ( oldServerAddressSet.contains(address) == false ){
+                log.info("create a new rpc_channel with the service-server : {}",address);
                 connectServerNode(address);
             }
         }
@@ -111,6 +110,8 @@ public class ConnectionManager {
                 log.info("delete invalid service-server : {}", address);
             }
         }
+
+        log.debug("rpc channels refreshing has finished.");
     }
 
     /**
@@ -120,8 +121,11 @@ public class ConnectionManager {
      */
     private void connectServerNode(final String address) {
         String[] addr = address.split(":");
-        if ( addr.length!=2 )
-            throw new RuntimeException("address格式不正确, 应为ip:port或host:port");
+        if ( addr.length!=2 ) {
+            log.error("Incorrect address format, the correct format should be 'ip:port'.");
+            return;
+        }
+
         final String host = addr[0];
         final int port = Integer.parseInt(addr[1]);
 
@@ -144,7 +148,7 @@ public class ConnectionManager {
                     public void operationComplete(ChannelFuture future) throws Exception {
                             // 连接成功之后
                         if ( future.isSuccess() ) {
-                            log.info("rpc连接成功...开始addChannel");
+                            log.info("connect with the server successfully , the address is {}", host+port);
                             RpcProcessHandler rpcProcessHandler = future.channel().pipeline().get(RpcProcessHandler.class);
                             addRpcChannel(address, new RpcChannel(future, rpcProcessHandler));
                         }
@@ -184,7 +188,7 @@ public class ConnectionManager {
 
         if ( serviceLocalDesc == null ){
             // 注册中心没有能提供这个服务的节点
-            log.warn("未能找到提供{}服务的节点",clazzName);
+            log.warn("there is no service-server can provide the service which className is {}", clazzName);
             return null;
         }
 
@@ -198,16 +202,16 @@ public class ConnectionManager {
 
         if (rpcChannel==null){
             if ( this.aliveServerAddressSet.contains(addr) == false ){
-                log.warn("获取sender失败，不存在服务...");
+                log.warn("get sender failed, because the alive-server-set doesn't have the server which address is: {}", addr);
             }else{
-                log.warn("正在建立rpc连接，请稍后...");
+                log.warn("rpc-channel-map is refreshing, please wait a moment...");
                 while( rpcChannel==null ){
                     rpcChannel = rpcChannelMap.get(addr);
-//                    try {
-//                        Thread.sleep(3*1000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                    try {
+                        Thread.sleep(3*1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

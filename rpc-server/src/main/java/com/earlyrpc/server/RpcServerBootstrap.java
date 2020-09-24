@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class RpcServerBootrap implements ApplicationContextAware, InitializingBean, DisposableBean {
+public class RpcServerBootstrap implements ApplicationContextAware, InitializingBean, DisposableBean {
 
     private RpcServer rpcServer;
 
@@ -56,7 +56,7 @@ public class RpcServerBootrap implements ApplicationContextAware, InitializingBe
                 aliveServiceMap
         );
 
-        log.warn("启动server...");
+        log.warn("start rpc-server...");
         // 3. 启动rpcServer
         rpcServer.start();
     }
@@ -112,7 +112,7 @@ public class RpcServerBootrap implements ApplicationContextAware, InitializingBe
 
     @Override
     public void destroy() throws Exception {
-        log.info("rpc服务器关闭...");
         rpcServer.stop();
+        log.info("rpc-server is closed...");
     }
 }
