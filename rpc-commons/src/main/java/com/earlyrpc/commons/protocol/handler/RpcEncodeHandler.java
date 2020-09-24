@@ -4,6 +4,7 @@ import com.earlyrpc.commons.protocol.EarlyRpcProtocol;
 import com.earlyrpc.commons.serializer.Serializer;
 import com.earlyrpc.commons.serializer.SerializerChooser;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -71,18 +72,27 @@ public class RpcEncodeHandler extends MessageToByteEncoder {
             // 3. 确定消息总长度, 总长度 = sizeof(protocolHeaderLength)
             //                          + protocolHeaderLength
             //                          + protocolBodyLength
-            int messageLength = Short.BYTES + protocolHeaderLength + protocolBodyBytes.length;
+//            int messageLength = 1 + Short.BYTES + protocolHeaderLength + protocolBodyBytes.length;
+
+            // 根据协议长度分配buffer
+            ByteBuf protocol = Unpooled.buffer();
+
+            protocol.writeByte(EarlyRpcProtocol.MAGIC_CODE);  //1B
+            protocol.writeShort(protocolHeaderLength);  // 2B
+            protocol.writeByte(version);        // 1B
+            protocol.writeByte(messageType);    // 1B
+            protocol.writeByte(serializeType);  // 1B
+
+            protocol.writeBytes(protocolBodyBytes); // ?B
+
+            int messageLength = protocol.readableBytes();
 
             // 4. 填装
-            byteBuf.writeInt(messageLength);                // 4
-            byteBuf.writeByte(EarlyRpcProtocol.MAGIC_CODE); // 1
-            byteBuf.writeShort(protocolHeaderLength);       // 2
-            byteBuf.writeByte(version);                     // 1
-            byteBuf.writeByte(messageType);                 // 1
-            byteBuf.writeByte(serializeType);               // 1
-            byteBuf.writeBytes(protocolBodyBytes);          // ?
+            byteBuf.writeInt(messageLength);
+            byteBuf.writeBytes(protocol);
 
-            log.warn("send a message : \n"
+
+            log.debug("send a message : \n"
             +"\tmessageLength:{},\n"
             +"\tprotocolHeaderLength:{}\n"
             +"\tversion:{},\n"

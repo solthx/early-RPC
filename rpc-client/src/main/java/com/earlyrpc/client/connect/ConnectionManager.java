@@ -230,7 +230,7 @@ public class ConnectionManager {
             rpcChannel.close();
         }
         group.shutdownGracefully();
-        log.info("connectManager关闭..");
+        log.info("connectManager closed..");
     }
 
 }

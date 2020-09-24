@@ -193,6 +193,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
     private void appendInfoDesc(List<BaseInfoDesc> resList, RegistryCenterConfig type) {
         try {
             String path = type.getPath();
+//            while(!cf.getState().equals(CuratorFrameworkState.STARTED));
             List<String> nodePathList = cf.getChildren().forPath(path);
             for(String nodePath:nodePathList){
                 String nodeAbsolutePath = path + "/" + nodePath;

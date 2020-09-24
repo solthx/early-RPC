@@ -39,6 +39,7 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final RpcRequest req) throws Exception {
+        log.info("CN: 接收到请求{}", req);
         threadPoolExecutor.submit(new Runnable() {
             @Override
             public void run() {

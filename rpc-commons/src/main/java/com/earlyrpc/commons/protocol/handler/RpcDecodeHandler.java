@@ -45,13 +45,30 @@ public class RpcDecodeHandler extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
         if (byteBuf.readableBytes() < 4) {
+//            byteBuf.markReaderIndex();
+//            log.info("{}<4 返回, 数据为：\n", byteBuf.readableBytes());
+//            char[] ch = byteBuf.readBytes(byteBuf.readableBytes()).toString().toCharArray();
+//            for( int i=0; i<ch.length; ++i ){
+//                System.out.print(ch[i]);
+//            }
+//            System.out.println();
+//            byteBuf.resetReaderIndex();
             return;
         }
 
         byteBuf.markReaderIndex();
+
         // 消息总长度
         int messageLength = byteBuf.readInt();
 
+
+//        if ( byteBuf.readableBytes()<messageLength ){
+//            log.info("{}<messageLength={} 返回", byteBuf.readableBytes(), messageLength);
+//            byteBuf.resetReaderIndex();
+//            return ;
+//        }
+
+        // 魔数
         byte magicCode = byteBuf.readByte();
 
         if ( magicCode != EarlyRpcProtocol.MAGIC_CODE ){
@@ -59,6 +76,7 @@ public class RpcDecodeHandler extends ByteToMessageDecoder {
             byteBuf.resetReaderIndex();
             return ;
         }
+
 
         // 协议头长度
         short protocolHeaderLength = byteBuf.readShort();

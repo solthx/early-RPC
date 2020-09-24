@@ -9,6 +9,7 @@ import com.earlyrpc.commons.utils.async.RpcResponsePromise;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 /**
  * 实现了rpc接口的代理对象
@@ -84,15 +85,12 @@ public class RpcProxy implements InvocationHandler {
      */
     private RpcRequest getRpcRequest(Method method, Object [] params) {
         RpcRequest req = new RpcRequest();
-//        req.setInterfaceName(desc.getInterfaceName());
-        // todo: mock数据，之后修改
-        req.setClazzName("com.earlyrpc.server.fake.HelloService");
-//        req.setClazzName(desc.getInterfaceName());
+        req.setRequestId(UUID.randomUUID().toString().hashCode());
+        req.setClazzName(method.getDeclaringClass().getName());
         req.setMethodName(method.getName());
         req.setParamTypeList(method.getParameterTypes());
         req.setParamList(params);
-        req.setRequestId(1); // todo:change
-        System.out.println(req);
+//        System.out.println(req); //todo
         return req;
     }
 }

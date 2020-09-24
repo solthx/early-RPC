@@ -33,6 +33,11 @@
             <artifactId>rpc-registry</artifactId>
             <version>${version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.czf</groupId>
+            <artifactId>rpc-export</artifactId>
+            <version>${version}</version>
+        </dependency>
     </dependencies>
 
 </project>

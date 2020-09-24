@@ -31,10 +31,10 @@ public class RpcProcessInitializer extends ChannelInitializer<SocketChannel> {
          *           d: 获取到长度len后，确定从哪个位置开始读取len个字节（就是读取的offset）
          *           e: 此时已经获取到了整个包体，e是指舍弃前e个字节之后，返回实际内容...
          * */
-        pipeline.addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0,0));
+        pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0,0));
         pipeline.addLast(new RpcEncodeHandler(RpcRequest.class));
         pipeline.addLast(new RpcDecodeHandler(RpcResponse.class));
         pipeline.addLast(new RpcProcessHandler());
-        pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+        pipeline.addLast(new LoggingHandler(LogLevel.DEBUG));
     }
 }

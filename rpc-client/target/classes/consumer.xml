@@ -7,6 +7,6 @@
         http://www.earlyrpc.com/schema/consumer
         http://www.earlyrpc.com/schema/consumer.xsd">
 
-    <erpc:consumer id="helloServicess" interface="com.earlyrpc.client.fake.export.HelloService"/>
+    <erpc:consumer id="helloServicess" interface="com.earlyrpc.export.HelloService"/>
 
 </beans>
