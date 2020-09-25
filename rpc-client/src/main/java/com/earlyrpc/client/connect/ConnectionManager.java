@@ -14,11 +14,15 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -29,6 +33,7 @@ import java.util.concurrent.*;
  * @Date 2020/8/18 9:49 下午
  */
 @Slf4j
+@Component
 public class ConnectionManager implements ApplicationListener<ContextClosedEvent> {
 
     /**
@@ -40,7 +45,6 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
      * 监听provider节点
      */
     private ZKClient providerManager;
-
 
     private EventLoopGroup group = new NioEventLoopGroup();
 
@@ -57,15 +61,26 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
 
     private Set<String> aliveServerAddressSet;
 
+    @Value("${erpc.consumer.registry.address}")
+    private String registryAddress;
+
     // 静态内部类实现单例
-    private ConnectionManager(String registryAddress){
+    public ConnectionManager(){
+        System.out.println("..");
+    }
+
+    /**
+     * connectionManager的初始化方法
+     */
+    @PostConstruct
+   public void init(){
 //        this.address = "127.0.0.1:2181";
 //        this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
-        this.providerManager = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
-        this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
-        InitProviderListener();
-        refreshRpcChannelMap(); // 初始化channel连接
-    }
+       this.providerManager = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
+       this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
+       InitProviderListener();
+       refreshRpcChannelMap(); // 初始化channel连接
+   }
 
     /**
      * 初始化providerManager的listener
@@ -244,4 +259,26 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
     public void onApplicationEvent(ContextClosedEvent event) {
         this.close();
     }
+
+//    @Override
+//    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+//        return bean;
+//    }
+
+    /**
+     * 初始化
+     *
+     * @param bean
+     * @param beanName
+     * @return
+     * @throws BeansException
+     */
+//    @Override
+//    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+//        if ( beanName.equals("connectionManager") && bean instanceof ConnectionManager ){
+//            ConnectionManager connectionManager = (ConnectionManager) bean;
+//            connectionManager.init();
+//        }
+//        return bean;
+//    }
 }

@@ -2,8 +2,10 @@ package com.earlyrpc.client.config.processor;
 
 import com.earlyrpc.client.annotation.RemoteInvoke;
 import com.earlyrpc.client.config.ConsumerDescription;
+import com.earlyrpc.client.connect.ConnectionManager;
 import com.earlyrpc.client.enums.Prefix;
 import com.earlyrpc.client.proxy.RpcProxyCreator;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import java.beans.PropertyDescriptor;
@@ -39,8 +42,6 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
     /**
      *  加载完所有BeanDefinition之后回调该方法
      *
-     *
-     *
      *  提前注册ConsumerDesc，并获取interfaceName
      *
      *  根据interfaceName进行rpc动态代理，并将结果注册到Spring容器中，之后就可以直接autowire了
@@ -51,8 +52,8 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         // 优先创建rpcProxyCreator
-        beanFactory.getBean("connectionManagerConfiguration");
-        this.rpcProxyCreator = (RpcProxyCreator) beanFactory.getBean("rpcProxyCreator");
+//        beanFactory.getBean("connectionManagerConfiguration");
+
 //
 //        if ( this.rpcProxyCreator == null ){
 //            log.error("Not found rpcProxyCreator... early-rpc is invalid...");
@@ -85,7 +86,6 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
 //            beanFactory.registerSingleton(beanName, rpcProxy);
 //            log.debug("create proxyObject by xml successfully ... beanName is [{}]",  beanName);
 //        }
-//
         this.beanFactory = beanFactory;
     }
 
@@ -98,15 +98,9 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
     private String getBeanName(String interfaceName) {
         // interfaceName是全限定类名
         String[] split = interfaceName.split("\\.");
-//        System.out.println(interfaceName);
         char [] name = split[split.length-1].toCharArray();
         name[0] = (char)((int)name[0] | 0x20); // 首字母变小写
         return new String(name);
-    }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        return bean;
     }
 
     /**
@@ -120,6 +114,29 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
      */
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if ( this.rpcProxyCreator == null ){
+            // 因为在afterInitialization里去创建rpcProxy, 在创建时需要用到rpcProxyCreator和其成员遍历
+            // connectionManager,  因为那个时候还没触发autowire，所以索性手动注入了...
+            rpcProxyCreator = beanFactory.getBean("rpcProxyCreator", RpcProxyCreator.class);
+        }
+
+        // 1. xml模式
+        if ( beanName.startsWith(Prefix.ERPC_CONSUMER_BEANNAME_PREFIX) && bean instanceof ConsumerDescription ){
+            ConsumerDescription desc = (ConsumerDescription) bean;
+            String interfaceName = desc.getInterfaceName();
+            String rpcBeanName = getBeanName(interfaceName);
+            // 在这里生成动态代理对象
+            Object rpcProxy = rpcProxyCreator.createProxy(desc);
+            if (rpcProxy==null){
+                log.warn("create proxyObject failed, the interface is named : {}", interfaceName);
+            }
+            // 这里注册的是rpc代理bean
+            this.beanFactory.registerSingleton(rpcBeanName, rpcProxy);
+            // 这里返回的是consumerDesc这个bean
+            return bean;
+        }
+
+        // 2. 注解模式
         Field[] fields = bean.getClass().getDeclaredFields();
         for( Field field:fields ){
             if ( field.isAnnotationPresent(RemoteInvoke.class) ){
@@ -161,23 +178,6 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
-//        if ( beanClass.isAnnotationPresent(RemoteInvoke.class) ){
-//            // 根据RemoteInvoke来实例化bean
-//            RemoteInvoke remoteInvokeAnno = beanClass.getAnnotation(RemoteInvoke.class);
-//
-//            ConsumerDescription desc = new ConsumerDescription(
-//                    beanClass.getName(),
-//                    remoteInvokeAnno.timeout(),
-//                    remoteInvokeAnno.serialization(),
-//                    remoteInvokeAnno.protocal());
-
-//            Object rpcProxy = RpcProxyCreator.createProxy(desc);
-//            if (rpcProxy==null){
-//                log.warn("create proxyObject failed, the interface is named : {}", beanClass.getName());
-//            }
-//            log.debug("create proxyObject by annotation:[{}] successfully ... beanName is [{}]", RemoteInvoke.class.getSimpleName(), beanName);
-//            return rpcProxy;
-//        }
         return null;
     }
 
@@ -191,4 +191,8 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
         return pvs;
     }
 
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        return bean;
+    }
 }

@@ -6,6 +6,7 @@ import com.earlyrpc.client.connect.Sender;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
 import com.earlyrpc.commons.utils.async.RpcResponsePromise;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

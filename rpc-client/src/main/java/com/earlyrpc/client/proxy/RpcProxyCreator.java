@@ -2,8 +2,12 @@ package com.earlyrpc.client.proxy;
 
 import com.earlyrpc.client.config.ConsumerDescription;
 import com.earlyrpc.client.connect.ConnectionManager;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
@@ -16,12 +20,16 @@ import java.lang.reflect.Proxy;
  * @date: 2020/8/18 10:21
  */
 @Slf4j
-public class RpcProxyCreator {
+@Component
+@Data
+public class RpcProxyCreator  {
 
+    @Autowired
     private ConnectionManager connectionManager;
 
-    public RpcProxyCreator(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
+    private ApplicationContext applicationContext;
+
+    public RpcProxyCreator() {
     }
 
     public Object createProxy(ConsumerDescription consumerDesc){
@@ -44,4 +52,9 @@ public class RpcProxyCreator {
                 new RpcProxy(consumerDesc, connectionManager));
     }
 
+//    @Override
+//    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+//        this.applicationContext = applicationContext;
+//        this.connectionManager = applicationContext.getBean(ConnectionManager.class);
+//    }
 }
