@@ -52,7 +52,7 @@ public class ClientMain {
 
 //        ConnectionManager.getInstance().close();
 //        applicationContext.close();
-        ConnectionManager.getInstance().close();
+//        ConnectionManager.getInstance().close();
         System.out.println("结束。。。");
     }
 }

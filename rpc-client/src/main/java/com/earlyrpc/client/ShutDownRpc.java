@@ -21,8 +21,8 @@ public class ShutDownRpc implements ApplicationListener<ApplicationEvent> {
      */
     @Override
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
-        if ( applicationEvent instanceof ContextClosedEvent){
-            ConnectionManager.getInstance().close();
-        }
+//        if ( applicationEvent instanceof ContextClosedEvent){
+//            ConnectionManager.getInstance().close();
+//        }
     }
 }

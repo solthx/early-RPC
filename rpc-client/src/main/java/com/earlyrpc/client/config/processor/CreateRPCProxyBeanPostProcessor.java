@@ -7,6 +7,7 @@ import com.earlyrpc.client.proxy.RpcProxyCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -33,8 +34,12 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
 
     private ConfigurableListableBeanFactory beanFactory;
 
+    private RpcProxyCreator rpcProxyCreator;
+
     /**
      *  加载完所有BeanDefinition之后回调该方法
+     *
+     *
      *
      *  提前注册ConsumerDesc，并获取interfaceName
      *
@@ -45,33 +50,42 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
      */
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        // xml配置的扫描
-        String[] consumerDesc = beanFactory.getBeanNamesForType(ConsumerDescription.class);
-        List<ConsumerDescription> cdl = new ArrayList<>();
-        for( String descName:consumerDesc ){
-            ConsumerDescription desc = (ConsumerDescription) beanFactory.getBean(descName);
-
-            String interfaceName = desc.getInterfaceName();
-            String beanName = getBeanName(interfaceName);
-            // 在这里生成动态代理对象
-            Object rpcProxy = RpcProxyCreator.createProxy(desc);
-            if (rpcProxy==null){
-                log.warn("create proxyObject failed, the interface is named : {}", interfaceName);
-            }
-
-            Object bean = null;
-            if ( beanFactory.containsBean(beanName) ) {
-                bean = beanFactory.getBean(beanName);
-            }
-            // 如果是和consumerDesc的beanName冲突，就直接删了consumerDesc的
-            if ( bean != null ){
-                beanFactory.destroyBean(beanName, bean);
-            }
-            // 注册rpc动态代理对象到底层容器
-            beanFactory.registerSingleton(beanName, rpcProxy);
-            log.debug("create proxyObject by xml successfully ... beanName is [{}]",  beanName);
-        }
-
+        // 优先创建rpcProxyCreator
+        beanFactory.getBean("connectionManagerConfiguration");
+        this.rpcProxyCreator = (RpcProxyCreator) beanFactory.getBean("rpcProxyCreator");
+//
+//        if ( this.rpcProxyCreator == null ){
+//            log.error("Not found rpcProxyCreator... early-rpc is invalid...");
+//            return ;
+//        }
+//
+//        // xml配置的扫描
+//        String[] consumerDesc = beanFactory.getBeanNamesForType(ConsumerDescription.class);
+//        List<ConsumerDescription> cdl = new ArrayList<>();
+//        for( String descName:consumerDesc ){
+//            ConsumerDescription desc = (ConsumerDescription) beanFactory.getBean(descName);
+//
+//            String interfaceName = desc.getInterfaceName();
+//            String beanName = getBeanName(interfaceName);
+//            // 在这里生成动态代理对象
+//            Object rpcProxy = rpcProxyCreator.createProxy(desc);
+//            if (rpcProxy==null){
+//                log.warn("create proxyObject failed, the interface is named : {}", interfaceName);
+//            }
+//
+//            Object bean = null;
+//            if ( beanFactory.containsBean(beanName) ) {
+//                bean = beanFactory.getBean(beanName);
+//            }
+//            // 如果是和consumerDesc的beanName冲突，就直接删了consumerDesc的
+//            if ( bean != null ){
+//                beanFactory.destroyBean(beanName, bean);
+//            }
+//            // 注册rpc动态代理对象到底层容器
+//            beanFactory.registerSingleton(beanName, rpcProxy);
+//            log.debug("create proxyObject by xml successfully ... beanName is [{}]",  beanName);
+//        }
+//
         this.beanFactory = beanFactory;
     }
 
@@ -121,7 +135,7 @@ public class CreateRPCProxyBeanPostProcessor implements BeanFactoryPostProcessor
                             remoteInvokeAnno.serialization(),
                             remoteInvokeAnno.protocal());
                     // 创建的代理bean对象
-                    Object rpcProxy = RpcProxyCreator.createProxy(desc);
+                    Object rpcProxy = rpcProxyCreator.createProxy(desc);
                     if (rpcProxy==null){
                         log.warn("create proxyObject failed, the interface is named : {}", field.getType().getName());
                     }

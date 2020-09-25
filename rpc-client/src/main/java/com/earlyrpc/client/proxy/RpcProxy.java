@@ -22,8 +22,11 @@ public class RpcProxy implements InvocationHandler {
     /* 根据改desc来构建RpcRequest */
     private ConsumerDescription desc;
 
-    public RpcProxy(ConsumerDescription desc) {
+    private ConnectionManager connectionManager;
+
+    public RpcProxy(ConsumerDescription desc, ConnectionManager connectionManager) {
         this.desc = desc;
+        this.connectionManager = connectionManager;
     }
 
     /**
@@ -62,7 +65,7 @@ public class RpcProxy implements InvocationHandler {
         RpcRequest rpcRequest = getRpcRequest(method, args);
 
         // 2. 发送端负载均衡获取一个sender
-        Sender sender = ConnectionManager.getInstance().getSender(rpcRequest.getClazzName());
+        Sender sender = connectionManager.getSender(rpcRequest.getClazzName());
 
         if (sender==null) {
             return null;

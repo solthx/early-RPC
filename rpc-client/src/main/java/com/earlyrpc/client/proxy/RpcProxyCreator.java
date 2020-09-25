@@ -1,7 +1,10 @@
 package com.earlyrpc.client.proxy;
 
 import com.earlyrpc.client.config.ConsumerDescription;
+import com.earlyrpc.client.connect.ConnectionManager;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
 
@@ -14,7 +17,14 @@ import java.lang.reflect.Proxy;
  */
 @Slf4j
 public class RpcProxyCreator {
-    public static Object createProxy(ConsumerDescription consumerDesc){
+
+    private ConnectionManager connectionManager;
+
+    public RpcProxyCreator(ConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
+
+    public Object createProxy(ConsumerDescription consumerDesc){
         String interfaceName = consumerDesc.getInterfaceName();
         Object proxyEntity = null;
         try {
@@ -27,11 +37,11 @@ public class RpcProxyCreator {
         return proxyEntity;
     }
 
-    public static<T> T createProxy(Class<T> interfaceClazz, ConsumerDescription consumerDesc){
+    public <T> T createProxy(Class<T> interfaceClazz, ConsumerDescription consumerDesc){
         return (T) Proxy.newProxyInstance(
                 interfaceClazz.getClassLoader(),
                 new Class[]{interfaceClazz},
-                new RpcProxy(consumerDesc));
+                new RpcProxy(consumerDesc, connectionManager));
     }
 
 }

@@ -14,6 +14,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,7 +29,7 @@ import java.util.concurrent.*;
  * @Date 2020/8/18 9:49 下午
  */
 @Slf4j
-public class ConnectionManager {
+public class ConnectionManager implements ApplicationListener<ContextClosedEvent> {
 
     /**
      * 监听consumer节点
@@ -50,15 +54,14 @@ public class ConnectionManager {
 
     private Random randomChoose = new Random();
 
-    private String address;
 
     private Set<String> aliveServerAddressSet;
 
     // 静态内部类实现单例
-    private ConnectionManager(){
-        this.address = "127.0.0.1:2181";
+    private ConnectionManager(String registryAddress){
+//        this.address = "127.0.0.1:2181";
 //        this.consumerManager = new ZKClient(address, RegistryCenterConfig.CONSUMER_TYPE);
-        this.providerManager = new ZKClient(address, RegistryCenterConfig.PROVIDER_TYPE);
+        this.providerManager = new ZKClient(registryAddress, RegistryCenterConfig.PROVIDER_TYPE);
         this.aliveServerAddressSet = Collections.newSetFromMap(new ConcurrentHashMap());
         InitProviderListener();
         refreshRpcChannelMap(); // 初始化channel连接
@@ -169,13 +172,13 @@ public class ConnectionManager {
     }
 
 
-    private static class ConnectionManagerSingleton{
-        public static ConnectionManager INSTANCE = new ConnectionManager();
-    }
-
-    public static ConnectionManager getInstance(){
-        return ConnectionManagerSingleton.INSTANCE;
-    }
+//    private static class ConnectionManagerSingleton{
+//        public static ConnectionManager INSTANCE = new ConnectionManager();
+//    }
+//
+//    public static ConnectionManager getInstance(){
+//        return ConnectionManagerSingleton.INSTANCE;
+//    }
 
     /**
      * 获取一个sender
@@ -233,4 +236,12 @@ public class ConnectionManager {
         log.info("connectManager closed..");
     }
 
+    /**
+     * applicationContext关闭时调用
+     * @param event
+     */
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        this.close();
+    }
 }
