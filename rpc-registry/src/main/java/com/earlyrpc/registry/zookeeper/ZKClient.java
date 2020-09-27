@@ -69,7 +69,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
      */
     private Serializer serializer;
 
-    public ZKClient(String address, Integer sessionTimeout, RetryPolicy retryPolicy, String listeningRootPath, Serializer serializer) {
+    public ZKClient(String address, Integer sessionTimeout, RetryPolicy retryPolicy, RegistryCenterConfig listeningRootPath, Serializer serializer) {
         this.address = address;
         this.sessionTimeout = sessionTimeout;
         this.retryPolicy = retryPolicy;
@@ -83,7 +83,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
         initZKPath();  // 初始化Zookeepr节点路径
 
-        PathChildrenCache pathChildrenCache = new PathChildrenCache(cf, listeningRootPath, true);
+        PathChildrenCache pathChildrenCache = new PathChildrenCache(cf, listeningRootPath.getPath(), true);
 
         // 当有子节点发生改变时，就触发更新本地信息
         pathChildrenCache.getListenable().addListener(new PathChildrenCacheListener() {
@@ -119,7 +119,7 @@ public class ZKClient extends LocalCacheTableManager implements RpcRegistry{
 
 
     public ZKClient(String address, Integer sessionTimeout, RegistryCenterConfig path, Serializer serializer) {
-        this(address, sessionTimeout, new ExponentialBackoffRetry(5000, 10), path.getPath(), serializer);
+        this(address, sessionTimeout, new ExponentialBackoffRetry(5000, 10), path, serializer);
     }
 
     public ZKClient(String address, RegistryCenterConfig path, Serializer serializer) {
