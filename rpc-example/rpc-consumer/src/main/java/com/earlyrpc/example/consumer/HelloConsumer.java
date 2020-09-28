@@ -27,8 +27,9 @@ public class HelloConsumer {
         HelloService helloService = helloConsumer.getHelloService();
 
         Scanner in = new Scanner(System.in);
-        int k = 1000;
-        while(k-->0){
+        int k = 0;
+        while(++k<=100){
+            System.out.println("please input your message:");
             System.out.println("["+k+"]："+helloService.hello(in.next()));
         }
         app.close();

@@ -34,7 +34,7 @@ public class RpcServerChannelInitializer extends ChannelInitializer<SocketChanne
 
     protected void initChannel(SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
-        pipeline.addLast(new IdleStateHandler(0,0,3, TimeUnit.SECONDS));
+        pipeline.addLast(new IdleStateHandler(0,0,15, TimeUnit.SECONDS));
         pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0,0));
         pipeline.addLast(new RpcDecodeHandler(RpcRequest.class));
         pipeline.addLast(new RpcEncodeHandler(RpcResponse.class));
