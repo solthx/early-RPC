@@ -109,9 +109,9 @@
 
         <!-- zookeeper框架——curator -->
         <dependency>
-        　　<groupId>org.apache.curator</groupId>
-        　　<artifactId>curator-recipes</artifactId>
-        　　<version>2.13.0</version>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>2.13.0</version>
         </dependency>
 
         <!-- 时间处理框架 -->

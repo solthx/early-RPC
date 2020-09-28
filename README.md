@@ -187,7 +187,7 @@ public class HelloConsumer {
 
 ```
 
-打印结果:
+测试结果:
 ```
 ....launch-log....
 
@@ -197,6 +197,10 @@ hello, early-rpc~
 
 ```
 
+（ps: 本次用例在rpc-example中）
+
 ## 2. 包结构
+
+
 
 ## 3. 原理

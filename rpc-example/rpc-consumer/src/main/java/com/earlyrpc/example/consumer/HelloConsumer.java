@@ -24,7 +24,7 @@ public class HelloConsumer {
 
         HelloService helloService = helloConsumer.getHelloService();
 
-        System.out.println(helloService.hello("程子丰"));
+        System.out.println(helloService.hello("early-rpc"));
 
         app.close();
     }
