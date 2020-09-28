@@ -1,5 +1,6 @@
 package com.earlyrpc.client.connect;
 
+import com.earlyrpc.client.enums.RpcChannelState;
 import com.earlyrpc.client.handler.RpcProcessHandler;
 import io.netty.channel.ChannelFuture;
 import lombok.Data;
@@ -12,14 +13,20 @@ import lombok.Data;
  */
 @Data
 public class RpcChannel {
+    private String address;
 
     private ChannelFuture channelFuture;
 
     private RpcProcessHandler rpcProcessHandler;
 
-    public RpcChannel(ChannelFuture channelFuture, RpcProcessHandler rpcProcessHandler) {
+    private RpcChannelState state;
+
+
+    public RpcChannel(String address, ChannelFuture channelFuture, RpcProcessHandler rpcProcessHandler, RpcChannelState state) {
+        this.address = address;
         this.channelFuture = channelFuture;
         this.rpcProcessHandler = rpcProcessHandler;
+        this.state = state;
     }
 
     /**

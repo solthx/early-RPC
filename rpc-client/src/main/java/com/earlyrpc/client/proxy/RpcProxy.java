@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 实现了rpc接口的代理对象
@@ -75,8 +76,8 @@ public class RpcProxy implements InvocationHandler {
         // 3. 使用sender进行发送
         RpcResponsePromise rpcResponsePromise = sender.sendRequest(rpcRequest);
 
-        // 4. 获取response并返回
-        RpcResponse response = rpcResponsePromise.get();
+        // 4. 获取response并返回, 最多等3s
+        RpcResponse response = rpcResponsePromise.get(2700, TimeUnit.MILLISECONDS);
         return response.getReturnData();
     }
 

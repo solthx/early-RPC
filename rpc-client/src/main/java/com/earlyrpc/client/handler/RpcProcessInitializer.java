@@ -1,5 +1,6 @@
 package com.earlyrpc.client.handler;
 
+import com.earlyrpc.client.connect.ConnectionManager;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
 import com.earlyrpc.commons.protocol.handler.RpcDecodeHandler;
@@ -16,6 +17,12 @@ import io.netty.handler.logging.LoggingHandler;
  * @date: 2020/9/21 16:58
  */
 public class RpcProcessInitializer extends ChannelInitializer<SocketChannel> {
+
+    private ConnectionManager connectionManager;
+
+    public RpcProcessInitializer(ConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
@@ -34,7 +41,7 @@ public class RpcProcessInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0,0));
         pipeline.addLast(new RpcEncodeHandler(RpcRequest.class));
         pipeline.addLast(new RpcDecodeHandler(RpcResponse.class));
-        pipeline.addLast(new RpcProcessHandler());
+        pipeline.addLast(new RpcProcessHandler(this.connectionManager));
         pipeline.addLast(new LoggingHandler(LogLevel.DEBUG));
     }
 }

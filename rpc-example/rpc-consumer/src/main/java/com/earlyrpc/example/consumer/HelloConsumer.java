@@ -6,6 +6,8 @@ import lombok.Data;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.Scanner;
+
 /**
  * @author czf
  * @Date 2020/9/24 11:07 下午
@@ -24,8 +26,11 @@ public class HelloConsumer {
 
         HelloService helloService = helloConsumer.getHelloService();
 
-        System.out.println(helloService.hello("early-rpc"));
-
+        Scanner in = new Scanner(System.in);
+        int k = 1000;
+        while(k-->0){
+            System.out.println("["+k+"]："+helloService.hello(in.next()));
+        }
         app.close();
     }
 }

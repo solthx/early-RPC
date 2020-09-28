@@ -1,6 +1,7 @@
 package com.earlyrpc.client.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.earlyrpc.client.connect.ConnectionManager;
 import com.earlyrpc.client.connect.Sender;
 import com.earlyrpc.commons.protocol.RpcRequest;
 import com.earlyrpc.commons.protocol.RpcResponse;
@@ -9,6 +10,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.ContextClosedEvent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +31,11 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
     /* 保存正在等待的promise (发出request之后，尚未收到response的那些消息) */
     private Map<Integer, RpcResponsePromise> promiseMap = new ConcurrentHashMap<>(16);
 
+    private ConnectionManager connectionManager;
+
+    public RpcProcessHandler(ConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     /**
      * 连接成功时，保存channel用于之后发送数
@@ -88,5 +95,20 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
             }
         });
         return promise;
+    }
+
+
+    /**
+     * 服务端主动断开时，该channel变不可用....
+     *
+     * @param ctx
+     * @throws Exception
+     */
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        connectionManager.removeRpcChannel(
+                ctx.channel().remoteAddress().toString().substring(1),
+                true);
+        log.warn("the connection with service-server {} had been disconnected...", ctx.channel().remoteAddress().toString());
     }
 }

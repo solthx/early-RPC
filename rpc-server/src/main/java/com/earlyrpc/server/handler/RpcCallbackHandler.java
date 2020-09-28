@@ -7,6 +7,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -115,5 +116,22 @@ public class RpcCallbackHandler extends SimpleChannelInboundHandler<RpcRequest> 
         log.warn("触发异常...{}",cause);
         System.out.println(ctx.name());
         ctx.close();
+    }
+
+    /**
+     * 心跳超时触发
+     * @param ctx
+     * @param evt
+     * @throws Exception
+     */
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if( evt instanceof IdleStateEvent){
+            // idle超时
+            log.warn("心跳检测——连接不够活跃，故删除...");
+            ctx.close();
+        }else{
+            super.userEventTriggered(ctx, evt);
+        }
     }
 }

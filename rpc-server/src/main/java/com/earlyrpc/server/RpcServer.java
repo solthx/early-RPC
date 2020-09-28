@@ -108,16 +108,16 @@ public class RpcServer extends Server {
         this.worker = new Thread(new Runnable() {
 
             private ThreadPoolExecutor threadPoolExecutor
-                    = new ThreadPoolExecutor(4, 8, 600, TimeUnit.SECONDS,new ArrayBlockingQueue<Runnable>(1000));
+                    = new ThreadPoolExecutor(4, 8, 600, TimeUnit.SECONDS,new ArrayBlockingQueue<Runnable>(1024));
 
             public void run() {
                 ServerBootstrap b = new ServerBootstrap();
                 try {
                     b.group(bossGroup, workerGroup)
                         .channel(NioServerSocketChannel.class)
-                        .childHandler(new RpcServerChannelInitializer(aliveServiceMap, threadPoolExecutor));
-//                        .option(ChannelOption.SO_BACKLOG, 128)
-//                        .childOption(ChannelOption.SO_KEEPALIVE, true); // todo:...
+                        .childHandler(new RpcServerChannelInitializer(aliveServiceMap, threadPoolExecutor))
+                        .option(ChannelOption.SO_BACKLOG, 1024);
+//                        .childOption(ChannelOption.SO_KEEPALIVE, true);
 
                     String[] addr = localAddress.split(":");
 
