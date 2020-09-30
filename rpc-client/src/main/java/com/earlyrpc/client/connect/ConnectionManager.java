@@ -62,7 +62,7 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
 
     private Random randomChoose = new Random();
 
-    @Value("${erpc.consumer.registry.address}")
+    @Value("${erpc.registry.address}")
     private String registryAddress;
 
     // 静态内部类实现单例
@@ -137,6 +137,7 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
         if ( !idleDelete ){
             // 不是idle斷開
             this.aliveServerAddressSet.remove(address);
+            log.info("delete invalid service-server : {}", address);
         }
         RpcProcessHandler rpcProcessHandler = null;
         if ( rpcChannelMap.containsKey(address) ) {
@@ -145,7 +146,6 @@ public class ConnectionManager implements ApplicationListener<ContextClosedEvent
         if (rpcProcessHandler!=null) {
             rpcProcessHandler.close();
         }
-        log.info("delete invalid service-server : {}", address);
     }
 
     public void removeRpcChannel(RpcChannel rpcChannel, boolean idleDelete){

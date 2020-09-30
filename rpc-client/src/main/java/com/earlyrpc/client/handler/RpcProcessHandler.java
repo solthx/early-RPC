@@ -109,6 +109,6 @@ public class RpcProcessHandler extends SimpleChannelInboundHandler<RpcResponse> 
         connectionManager.removeRpcChannel(
                 ctx.channel().remoteAddress().toString().substring(1),
                 true);
-        log.warn("the connection with service-server {} had been disconnected...", ctx.channel().remoteAddress().toString());
+        log.warn("due to the rpc-channel is not active in [idle time], the connection with service-server {} had been disconnected...", ctx.channel().remoteAddress().toString());
     }
 }
