@@ -2,6 +2,10 @@
 
 基于 spring + netty + zookeeper 实现轻量级RPC框架 
 
+
+
+![erpc-naive](./pic/naive-erpc.png)
+
 ## 一、 使用说明
 
 1. properties配置文件信息:
@@ -166,48 +170,48 @@ public interface HelloService {
 
 
 #### c. consumer端
-    ```java
-    package com.earlyrpc.example.consumer;
-    
-    import com.earlyrpc.client.annotation.RemoteInvoke;
-    import com.earlyrpc.export.HelloService;
-    import lombok.Data;
-    import org.springframework.context.support.ClassPathXmlApplicationContext;
-    import org.springframework.stereotype.Component;
-    
-    /**
-     *
-     * helloConsumer作为测试bean
-     *  
-     * @author czf
-     * @Date 2020/9/24 11:07 下午
-     */
-    @Data
-    @Component
-    public class HelloConsumer {
-    
-        // 自动Autowire进rpc服务接口
-        @RemoteInvoke
-        private HelloService helloService;
-    
-        public static void main(String[] args) {
-            // 启动spring
-            ClassPathXmlApplicationContext app = new ClassPathXmlApplicationContext("spring-config.xml");
-            
-            // 获取测试bean
-            HelloConsumer helloConsumer = app.getBean("helloConsumer", HelloConsumer.class);
-    
-            // 获取被RemoteInvoke自动填装的bean
-            HelloService helloService = helloConsumer.getHelloService();
-    
-            System.out.println(helloService.hello("early-rpc"));
-            
-            // earlyrpc的生命周期与spring的applicationContext同步
-            app.close();
-        }
+```java
+package com.earlyrpc.example.consumer;
+
+import com.earlyrpc.client.annotation.RemoteInvoke;
+import com.earlyrpc.export.HelloService;
+import lombok.Data;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Component;
+
+/**
+ *
+ * helloConsumer作为测试bean
+ *  
+ * @author czf
+ * @Date 2020/9/24 11:07 下午
+ */
+@Data
+@Component
+public class HelloConsumer {
+
+    // 自动Autowire进rpc服务接口
+    @RemoteInvoke
+    private HelloService helloService;
+
+    public static void main(String[] args) {
+        // 启动spring
+        ClassPathXmlApplicationContext app = new ClassPathXmlApplicationContext("spring-config.xml");
+        
+        // 获取测试bean
+        HelloConsumer helloConsumer = app.getBean("helloConsumer", HelloConsumer.class);
+
+        // 获取被RemoteInvoke自动填装的bean
+        HelloService helloService = helloConsumer.getHelloService();
+
+        System.out.println(helloService.hello("early-rpc"));
+        
+        // earlyrpc的生命周期与spring的applicationContext同步
+        app.close();
     }
-    
-    ```
+}
+
+```
 
 测试结果:
 ```
@@ -219,10 +223,39 @@ hello, early-rpc~
 
 ```
 
-（ps: 本次用例在rpc-example中）
+## 三、 实现细节
 
-## 三、 实现思路
+### 1. 整体概要
+![erpc-intro](./pic/erpc-intro.png)
 
-### 1. 思路概要
+### 2. early-rpc可扩展协议
+![erpc-protocol](./pic/erpc-protocol.png)
 
+1. 消息总长度：进行一次rpc所用消息的总长度(注: 消息总长度不包括长度字段自身所占长度)
 
+2. 魔数：用于唯一标示early-rpc协议
+
+3. 协议头（version 1.0）：
+    1. 协议头所占长度
+    2. 协议版本号
+    3. 消息类型
+    4. 序列化方式
+
+4. 协议体：
+    1. 消息Id
+    2. 被序列化的传输对象
+    
+### 3. 注册中心
+
+erpc(early-rpc)的注册中心模块主要是实现注册中心的客户端，该客户端至少需要2个功能：
+
+1. 对服务元数据的增删查改（ 对应注册服务，下线服务，查询服务，更新服务 ）
+2. 元数据被修改时，触发相关事件，进行方法回调
+
+![erpc-registry](./pic/erpc-registry.png)
+
+同时为了减少不必要的通信开销，该客户端也会在本地缓存注册中心存储的服务元信息(MetaData)，即本地缓存表(LocalCacheTable). 
+
+对于被存储的服务元信息，在注册中心和本地的表现形式也有所不同, 如下图所示
+
+![erpc-MetaData](./pic/erpc-MetaData.png)
