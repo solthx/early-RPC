@@ -267,15 +267,15 @@ erpc(early-rpc)的注册中心模块主要是实现注册中心的客户端，�
 
 下面简述一下几个实现细节
 
-### rpc动态代理对象创建流程
 
-1. <font color=brown size=4>**扫描到@RemoveInvoke注解**</font> 
+
+###  <font color=brown size=4>**扫描@RemoveInvoke**</font> 
 
 通过Spring提供的后置处理器来完成这一功能，通过实现BeanFactory级别的后置处理器`BeanFactoryPostProcessor`来获取底层的IOC容器`BeanFactory`用于之后将rpc动态代理对象注册到容器中.  再通过实现Bean级别的后置处理器`InstantiationAwareBeanPostProcessor`中的`postProcessAfterInitialization`方法（Bean初始化完之后回调该方法），通过遍历每一个Field，来扫描查看是否标记了`@RemoteInvoke`, 如果标记了，则尝试从容器中去取对应的Rpc动态代理Bean，若没有取到则说明还没有创建，就通过`RpcProxyCreator`去创建对应的rpc动态代理对象，再注册到IOC容器中， 最后获取到rpc代理对象后，以反射的形式注入到对应的Field域中.
 
 (对应类`com.earlyrpc.client.config.processor.CreateRPCProxyBeanPostProcessor`)
 
-2. <font color=brown size=4>**使用Proxy创建Rpc动态代理对象**</font> 
+###  <font color=brown size=4>**使用Proxy创建Rpc动态代理对象**</font> 
 
 在创建代理对象对接口方法进行重写的时候，主要做了以下几个事情:
 - 对Object中的一些方法进行过滤或直接返回处理(如:`equals, hashCode, toString`...)
@@ -285,8 +285,25 @@ erpc(early-rpc)的注册中心模块主要是实现注册中心的客户端，�
 
 (对应类`com.earlyrpc.client.proxy.RpcProxy`)
 
-3. <font color=brown size=4>**根据请求活跃度来动态调整长短连接**</font> 
+###  <font color=brown size=4>**根据请求活跃度来动态调整长短连接**</font> 
 
 在RPC客户端中，会维护一个连接池管理器(ConnectionManager)的单例, 它主要负责对连接(Channel)的管理，包括创建，维护与销毁. 在ConnectionManager中会和请求频繁的server建立长连接，而对于请求频率比较低的server使用短连接来做;  
 
 实现方式就是rpc-server会监听30s的心跳，如果心跳超时则就判定为不活跃的连接，直接断开与客户端的连接.
+
+###  <font color=brown size=4>**rpc客户端的关闭**</font> 
+
+rpc客户端基于Spring启动，也基于Spring关闭，通过监听SpringContext容器的关闭事件来对客户端进行关闭.
+
+
+## 5. 服务提供端(Provider)
+服务提供端实现的相关代码在rpc-server模块中. 该模块的主要作用:
+> 实现`@RpcService`进行服务暴露, 将提供的所有服务信息注册到注册中心上.
+
+### <font color=brown size=4>****服务端主要逻辑****</font>
+服务端也是基于Spring启动，在后置处理器的回调里启动RpcServer，在启动过程中做的事情包括:
+- 获取所有标记了`@RpcService`的Bean，并包装成serviceBean对象，全部都缓存到一个BeanMap中， 并注册到注册中心上.
+- 启动RpcServer (即Netty的启动)
+- 当有rpc请求到来时，从serviceMap中获取到对应的serviceBean，并通过反射的方式进行方法调用，根据返回的结果将其包装成RpcResponse进行返回
+- 当发生心跳超时事件时，则将与对应客户端的连接断开。
+- 当监听到SpringContext关闭的事件时，也随之关闭RpcServer
